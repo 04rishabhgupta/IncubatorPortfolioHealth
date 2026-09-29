@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { can, scopeStartups } from './rbac';
+import { can, scopeStartups, getAssignableAssociates, getAssignableManagers } from './rbac';
 import { User, Startup } from '@/types';
 
 const admin: User = { id: 'admin', email: 'admin@fitt.demo', role: 'ADMIN', label: 'Admin' };
@@ -50,5 +50,45 @@ describe('can', () => {
 
   it('prevents admin from drafting assessment', () => {
     expect(can(admin, 'draft_assessment', s1)).toBe(false);
+  });
+});
+
+describe('startup assignment permissions', () => {
+  const allUsers = [admin, im1, im2, ia1, ia3];
+
+  it('allows admin to reassign the manager of any startup', () => {
+    expect(can(admin, 'reassign_manager', s1)).toBe(true);
+    expect(can(admin, 'reassign_manager', s2)).toBe(true);
+  });
+
+  it('prevents managers and associates from reassigning the manager', () => {
+    expect(can(im1, 'reassign_manager', s1)).toBe(false);
+    expect(can(ia1, 'reassign_manager', s1)).toBe(false);
+  });
+
+  it('allows admin to assign an associate to any startup', () => {
+    expect(can(admin, 'assign_associate', s1)).toBe(true);
+    expect(can(admin, 'assign_associate', s2)).toBe(true);
+  });
+
+  it('allows an investment manager to assign an associate only on their own startups', () => {
+    expect(can(im1, 'assign_associate', s1)).toBe(true);
+    expect(can(im1, 'assign_associate', s2)).toBe(false);
+  });
+
+  it('prevents an investment associate from assigning another associate', () => {
+    expect(can(ia1, 'assign_associate', s1)).toBe(false);
+  });
+
+  it('getAssignableAssociates only returns associates reporting to the given manager', () => {
+    const forIm1 = getAssignableAssociates('im1', allUsers);
+    expect(forIm1.map(u => u.id)).toEqual(['ia1']);
+    const forIm2 = getAssignableAssociates('im2', allUsers);
+    expect(forIm2.map(u => u.id)).toEqual(['ia3']);
+  });
+
+  it('getAssignableManagers returns all investment managers', () => {
+    const managers = getAssignableManagers(allUsers);
+    expect(managers.map(u => u.id).sort()).toEqual(['im1', 'im2']);
   });
 });
