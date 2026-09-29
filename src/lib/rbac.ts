@@ -1,5 +1,15 @@
 import { User, Startup } from '@/types';
 
+// Associates a given Investment Manager can assign to their startups.
+export function getAssignableAssociates(managerId: string, allUsers: User[]): User[] {
+  return allUsers.filter((u) => u.role === 'INVESTMENT_ASSOCIATE' && u.managerId === managerId);
+}
+
+// Managers an Admin can reassign a startup to.
+export function getAssignableManagers(allUsers: User[]): User[] {
+  return allUsers.filter((u) => u.role === 'INVESTMENT_MANAGER');
+}
+
 export function scopeStartups(user: User, startups: Startup[]): Startup[] {
   if (user.role === 'ADMIN') {
     return startups;

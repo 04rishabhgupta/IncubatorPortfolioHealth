@@ -16,7 +16,7 @@ import { DataRequest } from '@/types';
 export default function FounderPortal() {
   const params = useParams();
   const token = params.token as string;
-  const { startups, metrics, assessments, milestones, mentorMatches, dataRequests, addSubmission, updateDataRequest, updateMilestone } = useStore();
+  const { startups, metrics, assessments, milestones, mentorMatches, dataRequests, founderActionItems, addSubmission, updateDataRequest, updateMilestone } = useStore();
 
   const [finForm, setFinForm] = useState({ cashBalance: '', monthlyRevenue: '' });
   const [tracForm, setTracForm] = useState({ customerConversations: '', pilots: '', payingCustomers: '' });
@@ -41,6 +41,7 @@ export default function FounderPortal() {
   const sMilestones = milestones.filter(m => m.startupId === startup.id);
   const sMatches = mentorMatches.filter(m => m.startupId === startup.id && m.status === 'ACTIVE');
   const openRequests = dataRequests.filter(r => r.startupId === startup.id && r.status === 'OPEN');
+  const sActionItems = founderActionItems.filter(a => a.startupId === startup.id);
 
   const handleFinancialSubmit = (req: DataRequest) => {
     addSubmission({
@@ -125,6 +126,31 @@ export default function FounderPortal() {
             </CardContent>
           </Card>
         </div>
+
+        {sActionItems.length > 0 && (
+          <Card className="border-amber-200">
+            <CardHeader className="bg-amber-50/50">
+              <CardTitle className="text-black">Action items</CardTitle>
+              <CardDescription>Shared by your investment team &mdash; please review and act on these.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              {sActionItems.map(item => (
+                <div key={item.id} className="border rounded-md p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-lg">{item.title}</h3>
+                    <Badge variant="outline">{item.sharedOn}</Badge>
+                  </div>
+                  <div className="text-sm text-black/60 space-y-1">
+                    <div><span className="font-medium text-black/80">Why:</span> {item.cause}</div>
+                    <div><span className="font-medium text-black/80">Effect:</span> {item.effect}</div>
+                    <div><span className="font-medium text-black/80">What to do:</span> {item.fix}</div>
+                    {item.note && <div className="italic mt-1">&ldquo;{item.note}&rdquo;</div>}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Data Requests */}

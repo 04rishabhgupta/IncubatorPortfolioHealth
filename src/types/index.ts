@@ -8,7 +8,7 @@ export interface User {
   managerId?: string; // associates only: the Investment Manager they report to
 }
 
-export type Sector = 'AI_ML' | 'MEDTECH' | 'AGRITECH' | 'CYBERSECURITY' | 'UAV' | 'SEMICONDUCTOR';
+export type Sector = 'AI_ML' | 'MEDTECH' | 'AGRITECH' | 'CYBERSECURITY' | 'UAV' | 'SEMICONDUCTOR' | 'ADVANCED_MATERIALS';
 export type Stage = 'PRE_INCUBATION' | 'EARLY_INCUBATION' | 'MID_INCUBATION' | 'LATE_INCUBATION' | 'ACCELERATION' | 'GRADUATED';
 export type CommercialSignal = 'NONE' | 'INTEREST' | 'PILOT_LOI' | 'PAYING';
 export type IPStatus = 'NONE' | 'TRADE_SECRET' | 'FILED' | 'GRANTED';
@@ -38,6 +38,205 @@ export interface Startup {
   founderToken: string;
   archived: boolean;
   regTags: RegTag[];
+  fittTracker?: FittTracker;
+}
+
+// ---- FITT tracker (Indigotex-style real-company data model) ----
+// All of this is optional on Startup, so existing demo startups (which have no
+// fittTracker) are entirely unaffected and keep using the generic startup page.
+
+export interface FittFounder {
+  name: string;
+  role: string;
+  commitment: 'FULL_TIME' | 'PART_TIME';
+  note: string;
+  flag?: string;
+}
+
+export interface FittCapTableEntry {
+  holder: string;
+  pct: number;
+  color: string;
+}
+
+export interface FittFundingEntry {
+  label: string;
+  amountCr: number;
+  kind: 'GRANT' | 'EQUITY' | 'SIGNING';
+}
+
+export interface FittUseOfFundsEntry {
+  label: string;
+  pct: number;
+  color: string;
+}
+
+export interface FittBaseline {
+  tags: string[]; // extra header chips, e.g. 'Deeptech', 'B2B'
+  dpiitRecognised: boolean;
+  cin: string;
+  roc: string;
+  incorporatedOn: string;
+  locations: string;
+  ipStatusNote: string;
+  techTransferNote: string;
+  totalRaisedNote: string;
+  founders: FittFounder[];
+  capTable: FittCapTableEntry[];
+  capTableNote: string;
+  funding: FittFundingEntry[];
+  fundingWidthDenominatorCr: number;
+  roundPostMoneyCr: number;
+  previousPreMoneyCr: number;
+  currentPreMoneyCr: number;
+  useOfFunds: FittUseOfFundsEntry[];
+}
+
+export interface FittOrderPipelineEntry {
+  name: string;
+  amountLakh: number;
+  capLakh: number;
+  tone: 'strong' | 'moderate' | 'neutral';
+}
+
+export interface FittMonthlyCheckin {
+  month: string; // 'YYYY-MM'
+  monthlyRevenue: number;
+  monthlyRevenueNote: string;
+  monthlyBurn: number;
+  cashNote: string;
+  runwayPmViewNote: string;
+  q1RevenueLakh: number;
+  q1RevenueTargetLakh: number;
+  payingCustomers: number;
+  payingCustomersNote: string;
+  grossMarginPct: number;
+  grossMarginNote: string;
+  productStage: string;
+  productStageNote: string;
+  orderPipeline: FittOrderPipelineEntry[];
+  customerConcentrationPct: number;
+  customerConcentrationNote: string;
+  fundraisingStage: 'Deck' | 'Pitching' | 'Term sheet' | 'Closed';
+  fundraisingNote: string;
+  technology: string;
+  pitchMaterials: string;
+  gtmProgress: string;
+  pmNotes: string;
+}
+
+export interface FittScoredParam {
+  label: string;
+  score: number;
+  max: number;
+  evidence: string;
+}
+
+export interface FittSection {
+  label: string;
+  weightPct: number;
+  total: number;
+  max: number;
+  params: FittScoredParam[];
+}
+
+export interface FittMarketSizing {
+  tamCr: number;
+  samCr: number;
+  somCr: number;
+  cagrPct: number;
+  note: string;
+}
+
+export interface FittSixMonthReview {
+  cycle: string; // e.g. 'April 2026'
+  overallPct: number;
+  sections: FittSection[];
+  supporting: FittScoredParam[];
+  porter: FittScoredParam[];
+  marketSizing: FittMarketSizing;
+}
+
+export interface FittSwot {
+  strengths: string[];
+  weaknesses: string[];
+  opportunities: string[];
+  threats: string[];
+}
+
+export interface FittValueChainStage {
+  stage: string;
+  score: number;
+  max: number;
+  bottleneck: boolean;
+}
+
+export interface FittDDItem {
+  item: string;
+  status: 'COMPLIANT' | 'ISSUE' | 'WAIVED';
+  reference: string;
+  notes: string;
+}
+
+export interface FittDDSection {
+  label: string;
+  items: FittDDItem[];
+}
+
+export interface FittSupportTask {
+  n: number;
+  date: string;
+  type: string;
+  title: string;
+  action: string;
+  outcome: string;
+  status: 'Pending' | 'In Progress' | 'Done';
+  owner: string;
+  source: string;
+  heldReason?: string;
+}
+
+export interface FittMentorSuggestion {
+  mentorId: string;
+  fit: 'h' | 'm' | 'l';
+  why: string;
+}
+
+export interface FittRedFlag {
+  text: string;
+  value: boolean;
+  evidence: string;
+}
+
+export interface FittNeedsAttentionItem {
+  key: string;
+  issue: string;
+  critical: boolean;
+  tag: string;
+  cause: string;
+  effect: string;
+  fix: string;
+}
+
+export interface FittNextAction {
+  label: string;
+  note: string;
+}
+
+export interface FittTracker {
+  checkedOn: string; // 'YYYY-MM-DD'
+  nextPmActions: FittNextAction[];
+  baseline: FittBaseline;
+  monthlyCheckins: FittMonthlyCheckin[];
+  sixMonthReviews: FittSixMonthReview[];
+  swot: FittSwot;
+  valueChain: FittValueChainStage[];
+  dueDiligence: FittDDSection[];
+  supportLog: FittSupportTask[];
+  mentorSuggestions: Record<number, FittMentorSuggestion[]>;
+  mentorGaps: Record<number, string>;
+  redFlags: FittRedFlag[];
+  needsAttention: FittNeedsAttentionItem[];
 }
 
 export interface TeamMember {
@@ -171,6 +370,9 @@ export interface MentorRequest {
   ranked?: { mentorId: string; score: number; reasoning: string }[];
   recommendedMentorId?: string;
   status: 'PENDING' | 'MATCHED' | 'DECLINED';
+  mentorId?: string; // set once a specific mentor is picked (e.g. from a support log task)
+  note?: string;
+  fittTaskN?: number; // links back to a FittSupportTask.n on the requesting startup
 }
 
 export interface MentorMatch {
@@ -182,6 +384,18 @@ export interface MentorMatch {
   confirmedOn: string;
   status: 'ACTIVE' | 'CLOSED';
   sessions: { id: string; date: string; topic: string; nextStep: string; rating?: 1 | 2 | 3 | 4 | 5 }[];
+}
+
+export interface FounderActionItem {
+  id: string;
+  startupId: string;
+  title: string;
+  cause: string;
+  effect: string;
+  fix: string;
+  note?: string;
+  sharedBy: string;
+  sharedOn: string;
 }
 
 export interface ActivityLog {

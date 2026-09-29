@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { FittStartupPage } from '@/components/fitt/FittStartupPage';
 
 export default function StartupPage() {
   const params = useParams();
@@ -44,6 +45,10 @@ export default function StartupPage() {
         <Button className="mt-4" onClick={() => router.push('/portfolio')}>Return to Portfolio</Button>
       </div>
     );
+  }
+
+  if (startup.fittTracker) {
+    return <FittStartupPage startup={startup} currentUser={currentUser} />;
   }
 
   const canEdit = can(currentUser, 'edit_startup', startup);
