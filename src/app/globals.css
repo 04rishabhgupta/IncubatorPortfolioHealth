@@ -1,4 +1,4 @@
-@import url('https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&f[]=satoshi@400,500,700,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -8,9 +8,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: 'Satoshi', sans-serif;
-  --font-mono: var(--font-geist-mono);
-  --font-heading: 'Clash Display', sans-serif;
+  --font-sans: var(--font-geist);
+  --font-mono: var(--font-ibm-plex-mono);
+  --font-heading: var(--font-neue-montreal);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -28,6 +28,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -40,92 +41,225 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
 }
 
 :root {
-  --background: #EFF2ED;
-  --foreground: #000000;
-  --card: #ffffff;
-  --card-foreground: #000000;
-  --popover: #ffffff;
-  --popover-foreground: #000000;
-  --primary: #1E4133;
-  --primary-foreground: #ffffff;
-  --secondary: #BBC3BE;
-  --secondary-foreground: #000000;
-  --muted: #E3E7E0;
-  --muted-foreground: #000000;
-  --accent: #E3E7E0;
-  --accent-foreground: #000000;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: #BBC3BE;
-  --input: #BBC3BE;
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #FFFFFF;
+  --foreground: #09090B;
+  --card: #FFFFFF;
+  --card-foreground: #09090B;
+  --popover: #FFFFFF;
+  --popover-foreground: #09090B;
+  --primary: #2563EB;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F4F4F5;
+  --secondary-foreground: #18181B;
+  --muted: #F4F4F5;
+  --muted-foreground: #71717A;
+  --accent: #F4F4F5;
+  --accent-foreground: #18181B;
+  --destructive: #DC2626;
+  --destructive-foreground: #FAFAFA;
+  --border: #E4E4E7;
+  --input: #E4E4E7;
+  --input-foreground: #09090B;
+  --ring: #2563EB;
+  --radius: 0.5rem;
+  --chart-1: #2563EB;
+  --chart-2: #3B82F6;
+  --chart-3: #10B981;
+  --chart-4: #F59E0B;
+  --chart-5: #8B5CF6;
+  --chart-positive: #10B981;
+  --chart-negative: #DC2626;
+  --font-geist: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  --font-neue-montreal: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-ibm-plex-mono: "IBM Plex Mono", "SF Mono", Monaco, Inconsolata, "Roboto Mono", "Courier New", monospace;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #09090B;
+  --sidebar-primary: #2563EB;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F4F4F5;
+  --sidebar-accent-foreground: #18181B;
+  --sidebar-border: #E4E4E7;
+  --sidebar-ring: #2563EB;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #09090B;
+  --foreground: #FAFAFA;
+  --card: #09090B;
+  --card-foreground: #FAFAFA;
+  --popover: #09090B;
+  --popover-foreground: #FAFAFA;
+  --primary: #2563EB;
+  --primary-foreground: #FFFFFF;
+  --secondary: #27272A;
+  --secondary-foreground: #FAFAFA;
+  --muted: #27272A;
+  --muted-foreground: #A1A1AA;
+  --accent: #27272A;
+  --accent-foreground: #FAFAFA;
+  --destructive: #DC2626;
+  --destructive-foreground: #FAFAFA;
+  --border: #27272A;
+  --input: #27272A;
+  --input-foreground: #FAFAFA;
+  --ring: #2563EB;
+  --chart-1: #3B82F6;
+  --chart-2: #60A5FA;
+  --chart-3: #34D399;
+  --chart-4: #FBBF24;
+  --chart-5: #A78BFA;
+  --chart-positive: #34D399;
+  --chart-negative: #F87171;
+  --sidebar: #09090B;
+  --sidebar-foreground: #FAFAFA;
+  --sidebar-primary: #2563EB;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #27272A;
+  --sidebar-accent-foreground: #FAFAFA;
+  --sidebar-border: #27272A;
+  --sidebar-ring: #2563EB;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans;
+    background-color: var(--background);
+    font-family: var(--font-geist), system-ui, sans-serif;
+    color: var(--foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-tight;
+    font-family: var(--font-neue-montreal), system-ui, sans-serif;
+    letter-spacing: -0.05em;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--foreground);
   }
+  h1 {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+  @media (min-width: 768px) {
+    h1 {
+      font-size: 3rem;
+      line-height: 1.1;
+    }
+  }
+  @media (min-width: 1024px) {
+    h1 {
+      font-size: 3.75rem;
+      line-height: 1;
+    }
+  }
+  h2 {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+  @media (min-width: 768px) {
+    h2 {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    h2 {
+      font-size: 3rem;
+      line-height: 1.1;
+    }
+  }
+  h3 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  @media (min-width: 768px) {
+    h3 {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
+  }
+  p, span, label, div:not([class*=chart]):not([class*=recharts]) {
+    font-family: var(--font-geist), system-ui, sans-serif;
+    letter-spacing: -0.03em;
+    line-height: 1.6;
+  }
+}
+
+/* Folio OS Typography & Utility Classes */
+.text-description {
+  font-family: var(--font-geist), system-ui, sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.text-numerical {
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.text-caption {
+  font-family: var(--font-geist), system-ui, sans-serif;
+  letter-spacing: -0.03em;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.text-metric {
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 2rem;
+  letter-spacing: -0.025em;
+}
+@media (min-width: 768px) {
+  .text-metric {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+}
+@media (min-width: 1024px) {
+  .text-metric {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+}
+
+.card-title {
+  font-family: var(--font-neue-montreal), system-ui, sans-serif;
+  letter-spacing: -0.05em;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.75rem;
+  color: var(--foreground);
+}
+@media (min-width: 768px) {
+  .card-title {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+}
+
+.folio-card {
+  background-color: var(--card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease-in-out;
+}
+
+.folio-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }

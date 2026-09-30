@@ -4,8 +4,8 @@ import AuthGuard from "@/components/AuthGuard";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "FolioOS",
-  description: "FITT Portfolio OS",
+  title: "Folio OS",
+  description: "Folio OS - Incubator Portfolio Health & Governance",
 };
 
 export default function RootLayout({

@@ -35,7 +35,7 @@ export function MonthlyCheckinTab({ tracker }: { tracker: FittTracker }) {
               label: o.name,
               value: o.amountLakh,
               max: o.capLakh,
-              color: o.tone === 'strong' ? '#2E7D4F' : o.tone === 'moderate' ? '#B8860B' : '#9AA39D',
+              color: o.tone === 'strong' ? '#16A34A' : o.tone === 'moderate' ? '#D97706' : '#A1A1AA',
               unit: ' L',
               badge: o.tone === 'strong' ? 'Executed' : o.tone === 'moderate' ? 'In Progress' : 'PO Awaited',
             }))}

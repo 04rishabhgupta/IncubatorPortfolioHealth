@@ -29,38 +29,38 @@ export function RadarChartComponent({
   data,
   title,
   height = 280,
-  color = '#1E4133',
-  fillColor = '#2E7D4F',
+  color = '#2563EB',
+  fillColor = '#3B82F6',
 }: RadarChartProps) {
   return (
     <div className="w-full flex flex-col items-center">
       {title && (
-        <div className="text-xs font-semibold uppercase tracking-wider text-black/60 mb-2 self-start">
+        <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2 self-start">
           {title}
         </div>
       )}
       <div style={{ width: '100%', height }} className="relative">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
-            <PolarGrid stroke="#E3E7E0" strokeDasharray="3 3" />
+            <PolarGrid stroke="#E4E4E7" strokeDasharray="3 3" />
             <PolarAngleAxis
               dataKey="dimension"
-              tick={{ fill: '#333', fontSize: 11, fontWeight: 500 }}
+              tick={{ fill: '#18181B', fontSize: 11, fontWeight: 500 }}
             />
             <PolarRadiusAxis
               angle={90}
               domain={[0, Math.max(...data.map(d => d.fullMark || 5))]}
-              tick={{ fill: '#888', fontSize: 10 }}
-              stroke="#E3E7E0"
+              tick={{ fill: '#71717A', fontSize: 10 }}
+              stroke="#E4E4E7"
             />
             <Tooltip
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   const item = payload[0].payload as RadarDataPoint;
                   return (
-                    <div className="bg-white px-3 py-2 border border-[#E3E7E0] rounded-lg shadow-sm text-xs">
-                      <p className="font-semibold text-gray-900">{item.dimension}</p>
-                      <p className="text-[#1E4133] font-bold">
+                    <div className="bg-white px-3 py-2 border border-[#E4E4E7] rounded-lg shadow-sm text-xs">
+                      <p className="font-semibold text-zinc-900">{item.dimension}</p>
+                      <p className="text-blue-600 font-bold">
                         Score: {item.score} / {item.fullMark}
                       </p>
                     </div>

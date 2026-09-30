@@ -19,11 +19,13 @@ import { SupportLogTab } from './SupportLogTab';
 import { SettingsTab } from './SettingsTab';
 import { TaskDialog } from './TaskDialog';
 import { MentorHub } from './MentorHub';
+import { AIDiagnosticsTab } from './AIDiagnosticsTab';
 
-type TabKey = 'overview' | 'monthly' | 'review' | 'company' | 'strategy' | 'dd' | 'support' | 'settings';
+type TabKey = 'overview' | 'ai' | 'monthly' | 'review' | 'company' | 'strategy' | 'dd' | 'support' | 'settings';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Overview' },
+  { key: 'ai', label: 'AI Diagnostics & Investibility' },
   { key: 'monthly', label: 'Monthly check-in' },
   { key: 'review', label: '6-month review' },
   { key: 'company', label: 'Company and funding' },
@@ -79,6 +81,7 @@ export function FittStartupPage({ startup, currentUser }: { startup: Startup; cu
           actor={currentUser.label}
         />
       )}
+      {tab === 'ai' && <AIDiagnosticsTab startup={startup} metrics={sMetrics} />}
       {tab === 'monthly' && <MonthlyCheckinTab tracker={tracker} />}
       {tab === 'review' && <SixMonthReviewTab tracker={tracker} />}
       {tab === 'company' && <CompanyFundingTab tracker={tracker} />}

@@ -49,7 +49,7 @@ export function DonutChartComponent({
                 if (active && payload && payload.length) {
                   const item = payload[0].payload as DonutSegment;
                   return (
-                    <div className="bg-white px-3 py-1.5 border border-[#E3E7E0] rounded-lg shadow-sm text-xs">
+                    <div className="bg-white px-3 py-1.5 border border-[#E4E4E7] rounded-lg shadow-sm text-xs">
                       <p className="font-semibold text-gray-900">{item.name}</p>
                       <p className="font-bold font-mono" style={{ color: item.color }}>
                         {item.value}%
@@ -111,7 +111,7 @@ export function DonutChartComponent({
                 className={`flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer ${
                   isHovered
                     ? 'border-gray-400 bg-gray-50 shadow-xs'
-                    : 'border-[#E3E7E0] bg-white hover:bg-gray-50/50'
+                    : 'border-[#E4E4E7] bg-white hover:bg-gray-50/50'
                 }`}
               >
                 <div className="flex items-center gap-2 overflow-hidden">

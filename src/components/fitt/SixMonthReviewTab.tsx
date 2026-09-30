@@ -23,7 +23,7 @@ export function SixMonthReviewTab({ tracker }: { tracker: FittTracker }) {
         <div className={styles.card}>
           <div className="flex items-center justify-between mb-1">
             <p className={styles.lbl} style={{ margin: 0 }}>Porter&rsquo;s 5 forces</p>
-            <span className="text-xs font-mono font-bold bg-[#EAF4EE] text-[#1E4133] px-2 py-0.5 rounded">
+            <span className="text-xs font-mono font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
               {porterTotal} / {porterMax} pts
             </span>
           </div>
