@@ -161,61 +161,64 @@ export function TopNavbar() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-[#E4E4E7] shadow-2xs">
-        <div className="flex h-16 items-center justify-between px-3 sm:px-6 lg:px-8 gap-2 lg:gap-3 max-w-7xl mx-auto">
-          {/* Left: Brand Logo & Mobile Toggle */}
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              aria-label="Toggle menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
+        <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 gap-4 w-full">
+          {/* Left: Brand Logo & Folio OS Navigation Links */}
+          <div className="flex items-center gap-4 lg:gap-8 shrink-0">
+            {/* Brand Logo & Mobile Toggle */}
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                aria-label="Toggle menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
 
-            <Link href={isAdmin ? '/admin' : '/portfolio'} className="flex items-center gap-2.5 shrink-0">
-              <div className="h-9 w-9 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-extrabold text-sm shadow-xs tracking-tight shrink-0">
-                FO
-              </div>
-              <div className="hidden sm:block text-left shrink-0">
-                <span className="font-extrabold text-base text-zinc-900 tracking-tight leading-none block whitespace-nowrap">
-                  Folio OS
-                </span>
-                <span className="text-[11px] text-zinc-500 font-medium tracking-tight block mt-0.5 whitespace-nowrap">
-                  Enterprise Portal
-                </span>
-              </div>
-            </Link>
+              <Link href={isAdmin ? '/admin' : '/portfolio'} className="flex items-center gap-2.5 shrink-0">
+                <div className="h-9 w-9 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-extrabold text-sm shadow-xs tracking-tight shrink-0">
+                  FO
+                </div>
+                <div className="hidden sm:block text-left shrink-0">
+                  <span className="font-extrabold text-base text-zinc-900 tracking-tight leading-none block whitespace-nowrap">
+                    Folio OS
+                  </span>
+                  <span className="text-[11px] text-zinc-500 font-medium tracking-tight block mt-0.5 whitespace-nowrap">
+                    Enterprise Portal
+                  </span>
+                </div>
+              </Link>
+            </div>
+
+            {/* Folio OS Navigation Links */}
+            <nav className="hidden lg:flex items-center gap-1 shrink-0">
+              {navItems.map((item) => {
+                const isActive =
+                  item.href === '/admin'
+                    ? pathname === '/admin'
+                    : pathname === item.href || pathname.startsWith(item.href + '/');
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${
+                      isActive
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/80'
+                    }`}
+                  >
+                    <item.icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : 'text-zinc-500'}`} />
+                    <span className="whitespace-nowrap">{item.label}</span>
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className="ml-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full shrink-0">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
-
-          {/* Center: Folio OS Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 shrink-0">
-            {navItems.map((item) => {
-              const isActive =
-                item.href === '/admin'
-                  ? pathname === '/admin'
-                  : pathname === item.href || pathname.startsWith(item.href + '/');
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${
-                    isActive
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/80'
-                  }`}
-                >
-                  <item.icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : 'text-zinc-500'}`} />
-                  <span className="whitespace-nowrap">{item.label}</span>
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="ml-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full shrink-0">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
 
           {/* Right: Search, Notifications, Add Startup, User Profile */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
