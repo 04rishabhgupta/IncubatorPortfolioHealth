@@ -259,7 +259,9 @@ export default function PortfolioDashboard() {
       {/* Top Banner with Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-[#E4E4E7] gap-4">
         <div>
-          <h1 className="heading-display text-zinc-950 tracking-tight">Incubator Dashboard</h1>
+          <h1 className="heading-display text-zinc-950 tracking-tight" style={{ fontSize: 'var(--type-display)' }}>
+            Incubator Dashboard
+          </h1>
           <p className="text-xs sm:text-sm text-blue-600 font-medium mt-1">Displaying data for India in INR.</p>
           <p className="text-xs sm:text-sm text-zinc-500">
             Comprehensive overview of key metrics and performance.
