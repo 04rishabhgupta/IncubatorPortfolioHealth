@@ -259,9 +259,10 @@ export default function PortfolioDashboard() {
       {/* Top Banner with Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-[#E4E4E7] gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight">Portfolio Dashboard</h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-1">
-            Executive overview of deeptech ventures, health trajectory, investibility rating, and capital runway.
+          <h1 className="heading-display text-zinc-950 tracking-tight">Incubator Dashboard</h1>
+          <p className="text-xs sm:text-sm text-blue-600 font-medium mt-1">Displaying data for India in INR.</p>
+          <p className="text-xs sm:text-sm text-zinc-500">
+            Comprehensive overview of key metrics and performance.
           </p>
         </div>
 

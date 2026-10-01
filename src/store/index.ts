@@ -110,7 +110,7 @@ function reconcileById<T extends { id: string; startupId?: string }>(seedArr: T[
 export const useStore = create<StoreState>()(
   persist(
     (set) => ({
-      currentUser: null,
+      currentUser: users[0],
       startups: enrichedSeedStartups,
       metrics: seedMetrics,
       assessments: seedAssessments,

@@ -276,7 +276,7 @@ export default function AdminOverview() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight">Admin Executive Overview</h1>
+          <h1 className="heading-display text-zinc-900 tracking-tight">Admin Executive Overview</h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-1">
             Enterprise portfolio governance, manager performance trajectories, and capital allocation across deeptech ventures.
           </p>

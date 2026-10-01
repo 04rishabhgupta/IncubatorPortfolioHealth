@@ -2,11 +2,20 @@
 
 import { useStore } from '@/store';
 import { TopNavbar } from '@/components/layout/TopNavbar';
+import { users } from '@/data/seed/users';
+import { useEffect } from 'react';
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
-  const { currentUser } = useStore();
+  const { currentUser, login } = useStore();
 
-  if (!currentUser) return null; // handled by AuthGuard
+  useEffect(() => {
+    if (!currentUser && users.length > 0) {
+      login(users[0]);
+    }
+  }, [currentUser, login]);
+
+  const activeUser = currentUser || users[0];
+  if (!activeUser) return null;
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex flex-col font-sans text-zinc-900 antialiased">

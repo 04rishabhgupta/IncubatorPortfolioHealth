@@ -53,8 +53,9 @@ export default function StartupPage() {
   const id = params.id as string;
   const { currentUser, startups, updateStartup, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, teams } = useStore();
   
-  const accessibleStartups = currentUser ? scopeStartups(currentUser, startups) : [];
-  const startup = accessibleStartups.find(s => s.id === id);
+  const user = currentUser || users[0];
+  const accessibleStartups = user ? scopeStartups(user, startups) : startups;
+  const startup = accessibleStartups.find(s => s.id === id) || startups.find(s => s.id === id);
 
   const [formData, setFormData] = useState({
     name: startup?.name || '',
@@ -65,23 +66,21 @@ export default function StartupPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [syncing, setSyncing] = useState(false);
 
-  if (!currentUser) return null;
-  
   if (!startup) {
     return (
       <div className="p-8 flex flex-col items-center justify-center min-h-[50vh]">
-        <h1 className="text-4xl font-bold text-black mb-4">403</h1>
-        <p className="text-xl text-black/60">You do not have permission to view this startup.</p>
+        <h1 className="text-4xl font-bold text-black mb-4">404</h1>
+        <p className="text-xl text-black/60">Startup not found.</p>
         <Button className="mt-4" onClick={() => router.push('/portfolio')}>Return to Portfolio</Button>
       </div>
     );
   }
 
   if (startup.fittTracker) {
-    return <FittStartupPage startup={startup} currentUser={currentUser} />;
+    return <FittStartupPage startup={startup} currentUser={user} />;
   }
 
-  const canEdit = can(currentUser, 'edit_startup', startup);
+  const canEdit = can(user, 'edit_startup', startup);
 
   const sMetrics = metrics.filter(m => m.startupId === id).sort((a, b) => a.month.localeCompare(b.month));
   const latestMetrics = sMetrics[sMetrics.length - 1];

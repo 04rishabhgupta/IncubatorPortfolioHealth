@@ -79,7 +79,7 @@ export function Header({ startup, manager, associate }: { startup: Startup; mana
     <div className={styles.card}>
       <div className={styles.headerCard}>
         <div>
-          <div style={{ fontSize: 28, fontWeight: 800 }}>{startup.name}</div>
+          <div className="heading-display">{startup.name}</div>
           <div style={{ color: 'var(--text-2)', marginTop: 2 }}>{startup.oneLiner}</div>
           <div style={{ marginTop: 8 }}>
             <span className={styles.chip}>{SECTOR_LABELS[startup.sector] || startup.sector}</span>

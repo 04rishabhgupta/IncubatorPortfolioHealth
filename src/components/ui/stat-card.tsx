@@ -25,17 +25,17 @@ export function StatCard({
 }: StatCardProps) {
   return (
     <Card className={cn('bg-white border border-[#E4E4E7] rounded-xl shadow-xs hover:border-zinc-300 transition-colors', className)}>
-      <CardContent className="p-5">
+      <CardContent className="p-5 sm:p-6">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-zinc-900 tracking-normal">{title}</span>
-          {Icon && <Icon className="h-4 w-4 text-zinc-400 stroke-[1.75]" />}
+          <span className="text-sm sm:text-base font-semibold text-zinc-900 tracking-normal">{title}</span>
+          {Icon && <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-400 stroke-[1.75]" />}
         </div>
-        <div className={cn('text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950 mt-3 tabular-nums', valueClassName)}>
+        <div className={cn('text-metric font-extrabold tracking-tight text-zinc-950 mt-2 sm:mt-3 tabular-nums', valueClassName)}>
           {value}
         </div>
         {(trend || subtitle) && (
-          <div className="text-xs text-zinc-500 font-normal mt-1.5 flex items-center gap-1">
-            {trend && <span className="text-zinc-600 font-medium">{trend}</span>}
+          <div className="text-xs sm:text-sm text-zinc-500 font-normal mt-1.5 sm:mt-2 flex items-center gap-1.5 flex-wrap">
+            {trend && <span className="text-emerald-600 font-semibold">{trend}</span>}
             {subtitle && <span>{subtitle}</span>}
           </div>
         )}
