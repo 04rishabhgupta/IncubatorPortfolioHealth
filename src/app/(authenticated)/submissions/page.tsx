@@ -123,7 +123,9 @@ export default function SubmissionsPage() {
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-[#E4E4E7] gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight">Founder Submissions</h1>
+          <h1 className="heading-display text-zinc-900 tracking-tight" style={{ fontSize: 'var(--type-display)' }}>
+            Founder Submissions
+          </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-1">
             Review monthly MIS uploads, financial accounts, and track pending compliance data requests.
           </p>

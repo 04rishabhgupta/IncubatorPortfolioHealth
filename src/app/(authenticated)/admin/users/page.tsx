@@ -3,6 +3,7 @@
 import { users } from '@/data/seed/users';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { StatCard } from '@/components/ui/stat-card';
 import {
   Table,
   TableBody,
@@ -23,7 +24,9 @@ export default function AdminUsersPage() {
       {/* Top Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-border gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Users & Governance</h1>
+          <h1 className="heading-display text-foreground tracking-tight" style={{ fontSize: 'var(--type-display)' }}>
+            Users & Governance
+          </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Incubator team hierarchy, investment manager portfolios, and associate venture assignments.
           </p>
@@ -32,49 +35,34 @@ export default function AdminUsersPage() {
 
       {/* Role Distribution Metric Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className="shadow-2xs">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between text-muted-foreground mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Total Users</span>
-              <Users className="h-4 w-4 text-primary" />
-            </div>
-            <div className="text-2xl font-bold text-foreground font-mono tracking-tight">{users.length}</div>
-            <span className="text-xs text-muted-foreground font-medium block mt-1">Active team members</span>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-2xs">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between text-muted-foreground mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Admins</span>
-              <Shield className="h-4 w-4 text-primary" />
-            </div>
-            <div className="text-2xl font-bold text-foreground font-mono tracking-tight">{adminCount}</div>
-            <span className="text-xs text-muted-foreground font-medium block mt-1">Full governance control</span>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-2xs">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between text-muted-foreground mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Investment Managers</span>
-              <Briefcase className="h-4 w-4 text-emerald-600" />
-            </div>
-            <div className="text-2xl font-bold text-emerald-600 font-mono tracking-tight">{imCount}</div>
-            <span className="text-xs text-emerald-600 font-medium block mt-1">Portfolio supervisors</span>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-2xs">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between text-muted-foreground mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Associates</span>
-              <UserCheck className="h-4 w-4 text-amber-500" />
-            </div>
-            <div className="text-2xl font-bold text-foreground font-mono tracking-tight">{iaCount}</div>
-            <span className="text-xs text-muted-foreground font-medium block mt-1">Operational support</span>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total Users"
+          value={users.length}
+          icon={Users}
+          trend="~ Active team"
+          subtitle="IIT Delhi FITT"
+        />
+        <StatCard
+          title="Admins"
+          value={adminCount}
+          icon={Shield}
+          trend="~ Full control"
+          subtitle="supervisors"
+        />
+        <StatCard
+          title="Investment Managers"
+          value={imCount}
+          icon={Briefcase}
+          trend="~ Deal leads"
+          subtitle="portfolio managers"
+        />
+        <StatCard
+          title="Associates"
+          value={iaCount}
+          icon={UserCheck}
+          trend="~ Support"
+          subtitle="analysts"
+        />
       </div>
 
       {/* Users Table */}

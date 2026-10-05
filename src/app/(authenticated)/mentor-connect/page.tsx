@@ -208,7 +208,9 @@ export default function MentorConnectPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-[#E4E4E7] gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight">Mentor Connect</h1>
+            <h1 className="heading-display text-zinc-900 tracking-tight" style={{ fontSize: 'var(--type-display)' }}>
+              Mentor Connect
+            </h1>
             <Badge className="bg-[#2563EB] text-white text-[10px]">2-Way Request & Response</Badge>
           </div>
           <p className="text-xs sm:text-sm text-zinc-500 mt-1">
