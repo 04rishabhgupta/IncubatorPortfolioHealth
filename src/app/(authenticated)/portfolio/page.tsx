@@ -5,22 +5,19 @@ import { useStore } from '@/store';
 import { scopeStartups } from '@/lib/rbac';
 import { DEMO_TODAY } from '@/lib/clock';
 import { getLatestMetrics, getLatestApprovedAssessment, getRunwayMonths, getNeedsAttentionRules } from '@/lib/derived';
-import { formatINR, formatINRExact } from '@/lib/utils';
+import { formatINRExact } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
 import {
   AlertCircle,
-  ShieldAlert,
   Activity,
   IndianRupee,
-  Briefcase,
   Building2,
   FileText,
   Users,
   Sparkles,
-  BarChart2,
   Clock,
   AlertTriangle,
   TrendingUp,
@@ -306,7 +303,7 @@ export default function PortfolioDashboard() {
             />
             <StatCard
               title="Funding Disbursed"
-              value="₹24,80,00,000.00"
+              value={formatINRExact(totalDisbursed)}
               icon={IndianRupee}
               trend="~ +15.3%"
               subtitle="of sanctioned"

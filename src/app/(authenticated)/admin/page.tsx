@@ -312,7 +312,7 @@ export default function AdminOverview() {
         />
         <StatCard
           title="Funding Disbursed"
-          value="₹24,80,00,000.00"
+          value="₹24,80,00,000"
           icon={IndianRupee}
           trend="~ +15.3%"
           subtitle="of sanctioned"
