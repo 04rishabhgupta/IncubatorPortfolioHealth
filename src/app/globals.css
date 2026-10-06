@@ -279,3 +279,21 @@
 .folio-card:hover {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
+/* ── Login showcase animations ─────────────────────────────── */
+@keyframes ls-spin { to { transform: rotate(360deg); } }
+@keyframes ls-ping { 75%, 100% { transform: translateX(-50%) scale(2.6); opacity: 0; } }
+@keyframes ls-pulse-ring { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.4); opacity: 0; } }
+@keyframes ls-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes ls-drift { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(60px, -40px) scale(1.12); } }
+@keyframes ls-grid-pan { to { background-position: 48px 48px; } }
+@keyframes ls-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes ls-feed-in { from { opacity: 0; transform: translateY(-10px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes ls-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes ls-shimmer { to { background-position: 200% center; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .login-showcase *, .login-showcase *::before, .login-showcase *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

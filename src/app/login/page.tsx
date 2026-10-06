@@ -1,140 +1,14 @@
 'use client';
 
-import { FormEvent, KeyboardEvent, useMemo, useRef, useState } from 'react';
+import { FormEvent, KeyboardEvent, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { AlertCircle, ArrowRight, Eye, EyeOff, Loader2, TrendingUp, Zap, AlertTriangle } from 'lucide-react';
 import { useStore } from '@/store';
 import { authenticate } from '@/data/seed/users';
 import { DemoCredentialsDialog } from '@/components/auth/DemoCredentialsDialog';
+import { LoginShowcase } from '@/components/auth/LoginShowcase';
 import { User } from '@/types';
-
-// Deterministic 0..1 value from a string, so each startup keeps a stable spot on the map.
-function seeded(str: string, salt: number) {
-  let h = 2166136261 ^ salt;
-  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
-  return ((h >>> 0) % 1000) / 1000;
-}
-
-function healthTone(score: number | undefined) {
-  if (score === undefined) return 'bg-zinc-600';
-  if (score >= 70) return 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.7)]';
-  if (score >= 50) return 'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.6)]';
-  return 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.7)]';
-}
-
-function ShowcasePanel() {
-  const startups = useStore(s => s.startups);
-  const active = useMemo(() => startups.filter(s => !s.archived), [startups]);
-
-  const stats = useMemo(() => {
-    const scored = active.filter(s => s.investibility);
-    const avg = scored.length
-      ? Math.round(scored.reduce((sum, s) => sum + (s.investibility?.total ?? 0), 0) / scored.length)
-      : 0;
-    const atRisk = scored.filter(s => (s.investibility?.total ?? 100) < 50);
-    return { avg, atRisk, cohorts: new Set(active.map(s => s.cohort)).size };
-  }, [active]);
-
-  const dots = active.slice(0, 14);
-
-  return (
-    <aside className="relative hidden overflow-hidden bg-zinc-950 text-white lg:flex lg:sticky lg:top-0 lg:h-dvh lg:w-[52%] lg:flex-col lg:justify-between lg:gap-10 lg:overflow-y-auto lg:px-12 lg:py-10 xl:px-14">
-      {/* Ambient glow */}
-      <div aria-hidden className="pointer-events-none absolute -left-32 -top-32 h-[28rem] w-[28rem] rounded-full bg-blue-600/25 blur-[120px]" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-40 right-0 h-[24rem] w-[24rem] rounded-full bg-indigo-600/15 blur-[120px]" />
-
-      <div className="relative flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-900/40">
-          <TrendingUp className="h-5 w-5 text-white" aria-hidden />
-        </div>
-        <div className="leading-tight">
-          <p className="text-base font-semibold text-white">Folio OS</p>
-          <p className="text-sm text-zinc-400">Portfolio Health &amp; Governance</p>
-        </div>
-      </div>
-
-      <div className="relative max-w-2xl space-y-7">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-blue-300">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400" aria-hidden />
-            Live Portfolio
-          </span>
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300">
-            <span className="text-white">{active.length}</span> startups tracked
-          </span>
-        </div>
-
-        <div className="space-y-4">
-          <p className="text-[2.5rem] font-extrabold leading-[1.08] tracking-[-0.04em] xl:text-[3rem]">
-            Portfolio Health &amp;
-            <br />
-            <span className="bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent">
-              Investment Intelligence
-            </span>
-          </p>
-          <p className="max-w-lg text-base text-zinc-400">
-            AI-powered investibility scoring, red-flag detection and mentor matching for every startup in your incubator.
-          </p>
-        </div>
-
-        {/* Health map */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
-          <div
-            aria-hidden
-            className="absolute inset-0 opacity-[0.07]"
-            style={{
-              backgroundImage:
-                'linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)',
-              backgroundSize: '44px 44px',
-            }}
-          />
-          <div className="relative h-48">
-            <span className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-blue-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-400" aria-hidden /> Health map
-            </span>
-            {dots.map(s => (
-              <div
-                key={s.id}
-                className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
-                style={{ left: `${8 + seeded(s.id, 1) * 80}%`, top: `${22 + seeded(s.id, 2) * 62}%` }}
-              >
-                <span className={`h-3 w-3 rounded-full ${healthTone(s.investibility?.total)}`} />
-                <span className="max-w-24 truncate rounded bg-zinc-950/70 px-1 font-mono text-[10px] text-zinc-400">
-                  {s.name}
-                </span>
-              </div>
-            ))}
-          </div>
-          {stats.atRisk.length > 0 && (
-            <div className="relative mx-3 mb-3 flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
-              <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="truncate">
-                {stats.atRisk.length} {stats.atRisk.length === 1 ? 'startup needs' : 'startups need'} attention
-                {stats.atRisk[0] && <span className="text-red-400/70"> · {stats.atRisk[0].name}</span>}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <dl className="grid grid-cols-3 gap-3">
-          {[
-            { label: 'Active startups', value: active.length },
-            { label: 'Cohorts', value: stats.cohorts },
-            { label: 'Avg. health score', value: stats.avg },
-          ].map(item => (
-            <div key={item.label} className="flex flex-col rounded-xl border border-white/10 bg-white/[0.03] px-4 py-4 text-center">
-              <dt className="order-2 text-xs text-zinc-400">{item.label}</dt>
-              <dd className="text-2xl font-bold tabular-nums text-blue-300">{item.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-
-      <p className="relative text-xs text-zinc-600">© {new Date().getFullYear()} Folio OS · FITT, IIT Delhi</p>
-    </aside>
-  );
-}
 
 type FieldErrors = { identifier?: string; password?: string };
 
@@ -203,7 +77,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-dvh bg-white">
-      <ShowcasePanel />
+      <LoginShowcase />
 
       <main className="flex flex-1 flex-col bg-zinc-50">
         <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-8">
