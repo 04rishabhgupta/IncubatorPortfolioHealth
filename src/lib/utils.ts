@@ -12,7 +12,7 @@ export function formatINR(rupees: number): string {
 export function formatINRExact(rupees: number): string {
   return `₹${rupees.toLocaleString('en-IN', {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0, minimumFractionDigits: 0,
   })}`;
 }
 
