@@ -158,7 +158,7 @@ export default function MentorConnectPage() {
     });
 
     addMentorMatch(newMatch);
-    toast.success('Mentor match confirmed! Both manager & associate notified.');
+    toast.success('Mentor match confirmed! Both portfolio head & portfolio manager notified.');
     setRespondingRequest(null);
     setResponseNote('');
     setActiveTab('matches');
@@ -214,7 +214,7 @@ export default function MentorConnectPage() {
             <Badge className="bg-[#2563EB] text-white text-[10px]">2-Way Request & Response</Badge>
           </div>
           <p className="text-xs sm:text-sm text-zinc-500 mt-1">
-            Connect portfolio startups with elite industry mentors. Both Investment Managers and Associates can raise
+            Connect portfolio startups with elite industry mentors. Both Portfolio Heads and Portfolio Managers can raise
             requests and confirm matches.
           </p>
         </div>
@@ -603,7 +603,7 @@ export default function MentorConnectPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-zinc-700">Internal Manager / Associate Note</Label>
+                <Label className="text-xs font-bold text-zinc-700">Internal Portfolio Head / Manager Note</Label>
                 <Input
                   value={requestNote}
                   onChange={(e) => setRequestNote(e.target.value)}

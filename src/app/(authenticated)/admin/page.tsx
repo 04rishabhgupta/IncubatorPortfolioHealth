@@ -216,7 +216,7 @@ export default function AdminOverview() {
   });
 
   const bandDistributionData = managerRows.map((row) => ({
-    name: row.mgr.label.replace('Investment Manager ', 'IM '),
+    name: row.mgr.label.replace('Portfolio Head ', 'PH '),
     HEALTHY: row.mBands.HEALTHY,
     WATCH: row.mBands.WATCH,
     AT_RISK: row.mBands.AT_RISK,
@@ -224,16 +224,16 @@ export default function AdminOverview() {
   }));
 
   const healthOverTimeConfig = {
-    'Investment Manager 1': {
-      label: 'Investment Manager 1',
+    'Portfolio Head 1': {
+      label: 'Portfolio Head 1',
       color: '#2563EB',
     },
-    'Investment Manager 2': {
-      label: 'Investment Manager 2',
+    'Portfolio Head 2': {
+      label: 'Portfolio Head 2',
       color: '#7C3AED',
     },
-    'Investment Manager 3': {
-      label: 'Investment Manager 3',
+    'Portfolio Head 3': {
+      label: 'Portfolio Head 3',
       color: '#06B6D4',
     },
   } satisfies ChartConfig;
@@ -363,15 +363,15 @@ export default function AdminOverview() {
       {/* Manager Comparison Table Card */}
       <Card className="shadow-2xs overflow-hidden">
         <CardHeader className="p-4 sm:p-5 border-b border-border">
-          <CardTitle className="text-base font-bold tracking-tight">Investment Manager Comparison</CardTitle>
-          <CardDescription className="text-xs">Click any manager row to inspect their executive top-level portfolio drilldown.</CardDescription>
+          <CardTitle className="text-base font-bold tracking-tight">Portfolio Head Comparison</CardTitle>
+          <CardDescription className="text-xs">Click any portfolio head row to inspect their executive top-level portfolio drilldown.</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Investment Manager</TableHead>
-                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Associates</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Portfolio Head</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Portfolio Managers</TableHead>
                 <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Startups</TableHead>
                 <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Avg Health</TableHead>
                 <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">3M Change</TableHead>
@@ -466,7 +466,7 @@ export default function AdminOverview() {
               </CardTitle>
             </div>
             <CardDescription className="text-xs text-zinc-500 font-normal mt-0.5">
-              Historical performance trajectory across investment managers.
+              Historical performance trajectory across portfolio heads.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-5 pt-4">
@@ -481,9 +481,9 @@ export default function AdminOverview() {
                 <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                <Line type="monotone" dataKey="Investment Manager 1" stroke="#2563EB" strokeWidth={2.5} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="Investment Manager 2" stroke="#7C3AED" strokeWidth={2.5} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="Investment Manager 3" stroke="#06B6D4" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="Portfolio Head 1" stroke="#2563EB" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="Portfolio Head 2" stroke="#7C3AED" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="Portfolio Head 3" stroke="#06B6D4" strokeWidth={2.5} dot={{ r: 3 }} />
               </LineChart>
             </ChartContainer>
           </CardContent>

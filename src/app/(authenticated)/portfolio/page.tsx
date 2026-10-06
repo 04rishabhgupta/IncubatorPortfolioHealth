@@ -509,8 +509,8 @@ export default function PortfolioDashboard() {
             <CardContent className="p-4">
               <DataTable
                 columns={columns.filter((c) => {
-                  if (c.header === 'Manager') return currentUser.role === 'ADMIN';
-                  if (c.header === 'Associate')
+                  if (c.header === 'Portfolio Head') return currentUser.role === 'ADMIN';
+                  if (c.header === 'Portfolio Manager')
                     return currentUser.role === 'ADMIN' || currentUser.role === 'INVESTMENT_MANAGER';
                   return true;
                 })}

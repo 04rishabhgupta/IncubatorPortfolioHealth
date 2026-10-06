@@ -92,10 +92,10 @@ export function Header({ startup, manager, associate }: { startup: Startup; mana
         </div>
         <div className={styles.textRight}>
           <div>
-            Manager: <b style={{ color: 'var(--text)' }}>{manager?.label || 'Unassigned'}</b>
+            Portfolio Head: <b style={{ color: 'var(--text)' }}>{manager?.label || 'Unassigned'}</b>
           </div>
           <div>
-            Associate: <b style={{ color: 'var(--text)' }}>{associate?.label || 'To be assigned'}</b>
+            Portfolio Manager: <b style={{ color: 'var(--text)' }}>{associate?.label || 'To be assigned'}</b>
           </div>
           {lastCheckin && <div style={{ fontSize: 12 }}>Last check-in: {monthLabel(lastCheckin.month)}</div>}
           {lastReview && <div style={{ fontSize: 12 }}>Review cycle: {lastReview.cycle}</div>}

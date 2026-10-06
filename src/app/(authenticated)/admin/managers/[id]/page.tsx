@@ -211,7 +211,7 @@ export default function ManagerDrillDown() {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-zinc-500 mt-1">
-            {associates.length} Associates • {mStartups.length} Startups • Avg Health: <span className="font-bold text-zinc-900">{avgHealth}</span>
+            {associates.length} Portfolio Managers • {mStartups.length} Startups • Avg Health: <span className="font-bold text-zinc-900">{avgHealth}</span>
             <span className={`ml-2 font-bold ${change3m >= 0 ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
               ({change3m > 0 ? '▲' : '▼'} {Math.abs(change3m).toFixed(1)} vs 3m ago)
             </span>
@@ -227,7 +227,7 @@ export default function ManagerDrillDown() {
               Compare Startups
             </TabsTrigger>
             <TabsTrigger value="associates" className="data-[state=active]:bg-[#2563EB] data-[state=active]:text-white text-xs font-semibold">
-              Associates ({associates.length})
+              Portfolio Managers ({associates.length})
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -286,11 +286,11 @@ export default function ManagerDrillDown() {
             <CardTitle className="text-base font-bold tracking-tight">
               {manager.label} Portfolio Companies
             </CardTitle>
-            <CardDescription className="text-xs">Comprehensive view of ventures supervised under this manager.</CardDescription>
+            <CardDescription className="text-xs">Comprehensive view of ventures supervised under this portfolio head.</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
             <DataTable
-              columns={columns.filter((c) => c.header !== 'Manager')}
+              columns={columns.filter((c) => c.header !== 'Portfolio Head')}
               data={tableData}
               showExport={true}
               onExport={handleExport}
@@ -308,14 +308,14 @@ export default function ManagerDrillDown() {
       {activeTab === 'associates' && (
         <Card className="shadow-2xs overflow-hidden">
           <CardHeader className="p-4 sm:p-5 border-b border-border">
-            <CardTitle className="text-base font-bold tracking-tight">Assigned Investment Associates</CardTitle>
-            <CardDescription className="text-xs">Associates reporting to {manager.label} and their respective portfolio health averages.</CardDescription>
+            <CardTitle className="text-base font-bold tracking-tight">Assigned Portfolio Managers</CardTitle>
+            <CardDescription className="text-xs">Portfolio Managers reporting to {manager.label} and their respective portfolio health averages.</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>
-                  <TableHead className="h-9 px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Associate</TableHead>
+                  <TableHead className="h-9 px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Portfolio Manager</TableHead>
                   <TableHead className="h-9 px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assigned Startups</TableHead>
                   <TableHead className="h-9 px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Average Health</TableHead>
                 </TableRow>

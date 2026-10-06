@@ -77,7 +77,7 @@ export const columns: ColumnDef<PortfolioRow>[] = [
   {
     accessorKey: 'managerId',
     accessorFn: (row) => row.startup.managerId,
-    header: 'Manager',
+    header: 'Portfolio Head',
     cell: ({ row }) => {
       const u = users.find((u) => u.id === row.original.startup.managerId);
       return <span className="text-sm whitespace-nowrap">{u ? u.label : '-'}</span>;
@@ -89,7 +89,7 @@ export const columns: ColumnDef<PortfolioRow>[] = [
   {
     accessorKey: 'associateId',
     accessorFn: (row) => row.startup.associateId,
-    header: 'Associate',
+    header: 'Portfolio Manager',
     cell: ({ row }) => {
       const u = users.find((u) => u.id === row.original.startup.associateId);
       return <span className="text-sm whitespace-nowrap">{u ? u.label : 'Unassigned'}</span>;
