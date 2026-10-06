@@ -34,16 +34,16 @@ describe('can', () => {
     expect(can(ia1, 'admin_overview')).toBe(false);
   });
 
-  it('allows investment manager to approve assessment for own startup', () => {
+  it('allows portfolio head to approve assessment for own startup', () => {
     expect(can(im1, 'approve_assessment', s1)).toBe(true);
     expect(can(im1, 'approve_assessment', s2)).toBe(false);
   });
 
-  it('prevents associate from approving assessments', () => {
+  it('prevents portfolio manager from approving assessments', () => {
     expect(can(ia1, 'approve_assessment', s1)).toBe(false);
   });
 
-  it('allows associate to draft assessment for own startup', () => {
+  it('allows portfolio manager to draft assessment for own startup', () => {
     expect(can(ia1, 'draft_assessment', s1)).toBe(true);
     expect(can(ia1, 'draft_assessment', s2)).toBe(false);
   });
@@ -61,33 +61,33 @@ describe('startup assignment permissions', () => {
     expect(can(admin, 'reassign_manager', s2)).toBe(true);
   });
 
-  it('prevents managers and associates from reassigning the manager', () => {
+  it('prevents portfolio heads and portfolio managers from reassigning the portfolio head', () => {
     expect(can(im1, 'reassign_manager', s1)).toBe(false);
     expect(can(ia1, 'reassign_manager', s1)).toBe(false);
   });
 
-  it('allows admin to assign an associate to any startup', () => {
+  it('allows admin to assign a portfolio manager to any startup', () => {
     expect(can(admin, 'assign_associate', s1)).toBe(true);
     expect(can(admin, 'assign_associate', s2)).toBe(true);
   });
 
-  it('allows an investment manager to assign an associate only on their own startups', () => {
+  it('allows a portfolio head to assign a portfolio manager only on their own startups', () => {
     expect(can(im1, 'assign_associate', s1)).toBe(true);
     expect(can(im1, 'assign_associate', s2)).toBe(false);
   });
 
-  it('prevents an investment associate from assigning another associate', () => {
+  it('prevents a portfolio manager from assigning another portfolio manager', () => {
     expect(can(ia1, 'assign_associate', s1)).toBe(false);
   });
 
-  it('getAssignableAssociates only returns associates reporting to the given manager', () => {
+  it('getAssignableAssociates only returns portfolio managers reporting to the given portfolio head', () => {
     const forIm1 = getAssignableAssociates('im1', allUsers);
     expect(forIm1.map(u => u.id)).toEqual(['ia1']);
     const forIm2 = getAssignableAssociates('im2', allUsers);
     expect(forIm2.map(u => u.id)).toEqual(['ia3']);
   });
 
-  it('getAssignableManagers returns all investment managers', () => {
+  it('getAssignableManagers returns all portfolio heads', () => {
     const managers = getAssignableManagers(allUsers);
     expect(managers.map(u => u.id).sort()).toEqual(['im1', 'im2']);
   });

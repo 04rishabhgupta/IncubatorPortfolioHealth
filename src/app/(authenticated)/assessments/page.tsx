@@ -98,7 +98,7 @@ export default function AssessmentsPage() {
           value={awaiting.length}
           icon={Clock}
           trend="~ Pending action"
-          subtitle="submitted by associates"
+          subtitle="submitted by portfolio managers"
           valueClassName={awaiting.length > 0 ? "text-amber-600" : ""}
         />
         <StatCard

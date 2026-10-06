@@ -28,7 +28,7 @@ export default function AdminUsersPage() {
             Users & Governance
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Incubator team hierarchy, investment manager portfolios, and associate venture assignments.
+            Incubator team hierarchy, portfolio head jurisdictions, and portfolio manager venture assignments.
           </p>
         </div>
       </div>
@@ -50,18 +50,18 @@ export default function AdminUsersPage() {
           subtitle="supervisors"
         />
         <StatCard
-          title="Investment Managers"
+          title="Portfolio Heads"
           value={imCount}
           icon={Briefcase}
           trend="~ Deal leads"
-          subtitle="portfolio managers"
+          subtitle="portfolio supervisors"
         />
         <StatCard
-          title="Associates"
+          title="Portfolio Managers"
           value={iaCount}
           icon={UserCheck}
-          trend="~ Support"
-          subtitle="analysts"
+          trend="~ Operations"
+          subtitle="venture managers"
         />
       </div>
 
@@ -78,7 +78,7 @@ export default function AdminUsersPage() {
                 <TableHead className="h-9 px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">User</TableHead>
                 <TableHead className="h-9 px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email</TableHead>
                 <TableHead className="h-9 px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Role</TableHead>
-                <TableHead className="h-9 px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Direct Manager</TableHead>
+                <TableHead className="h-9 px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Direct Portfolio Head</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -103,7 +103,11 @@ export default function AdminUsersPage() {
                             : 'bg-secondary text-secondary-foreground'
                         }`}
                       >
-                        {u.role.replace(/_/g, ' ')}
+                        {u.role === 'ADMIN'
+                          ? 'Admin'
+                          : u.role === 'INVESTMENT_MANAGER'
+                          ? 'Portfolio Head'
+                          : 'Portfolio Manager'}
                       </Badge>
                     </TableCell>
                     <TableCell className="px-5 py-3.5 text-muted-foreground font-medium">

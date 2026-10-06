@@ -196,12 +196,12 @@ export function SettingsTab({
           <label>City / HQ
             <input name="city" value={form.city} disabled={!editing || !canModify} onChange={e => setField('city', e.target.value)} />
           </label>
-          <label>Investment Manager
+          <label>Portfolio Head
             <select name="mgr" value={managerId} disabled={!editing || !canAssignManager} onChange={e => handleManagerChange(e.target.value)}>
               {managers.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
             </select>
           </label>
-          <label>Investment Associate
+          <label>Portfolio Manager
             <select name="assoc" value={associateId} disabled={!editing || !canAssignAssociate} onChange={e => { setAssociateId(e.target.value); setError(''); }}>
               <option value="">To be assigned</option>
               {associates.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}

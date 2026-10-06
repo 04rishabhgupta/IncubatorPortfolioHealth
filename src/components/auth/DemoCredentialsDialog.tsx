@@ -37,8 +37,8 @@ const ROLES: RoleConfig[] = [
   },
   {
     role: 'INVESTMENT_MANAGER',
-    title: 'Investment Manager',
-    description: 'Own a portfolio, assign associates, review assessments and approve submissions.',
+    title: 'Portfolio Head',
+    description: 'Own a portfolio, assign portfolio managers, review assessments and approve submissions.',
     icon: Briefcase,
     card: 'border-blue-200 bg-blue-50/60',
     badge: 'border-blue-200 bg-white text-blue-800',
@@ -50,7 +50,7 @@ const ROLES: RoleConfig[] = [
   },
   {
     role: 'INVESTMENT_ASSOCIATE',
-    title: 'Investment Associate',
+    title: 'Portfolio Manager',
     description: 'Track assigned startups, log check-ins and support. Cannot manage users.',
     icon: UserRound,
     card: 'border-emerald-200 bg-emerald-50/60',

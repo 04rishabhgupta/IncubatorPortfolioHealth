@@ -425,7 +425,7 @@ export function StartupUploadModal({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-zinc-700">Assigned Investment Manager</Label>
+              <Label className="text-xs font-bold text-zinc-700">Assigned Portfolio Head</Label>
               <select
                 value={managerId}
                 onChange={(e) => {
@@ -443,7 +443,7 @@ export function StartupUploadModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-zinc-700">Assigned Associate</Label>
+              <Label className="text-xs font-bold text-zinc-700">Assigned Portfolio Manager</Label>
               <select
                 value={associateId || ''}
                 onChange={(e) => setAssociateId(e.target.value || null)}

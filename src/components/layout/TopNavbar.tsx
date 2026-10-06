@@ -133,8 +133,8 @@ export function TopNavbar() {
 
   const getRoleLabel = () => {
     if (currentUser.role === 'ADMIN') return 'Portfolio Director (Admin)';
-    if (currentUser.role === 'INVESTMENT_MANAGER') return 'Investment Manager';
-    return 'Investment Associate';
+    if (currentUser.role === 'INVESTMENT_MANAGER') return 'Portfolio Head';
+    return 'Portfolio Manager';
   };
 
   // Nav Items configured per role

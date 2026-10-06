@@ -338,7 +338,7 @@ export function StartupEditModal({ startup, isOpen, onClose, onDeleted }: Startu
           {/* Assignments */}
           <div className="bg-[#FAFAFA] p-4 rounded-xl border border-[#E4E4E7] grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-gray-700">Managing Investment Manager</Label>
+              <Label className="text-xs font-bold text-gray-700">Managing Portfolio Head</Label>
               <select
                 value={managerId}
                 onChange={(e) => {
@@ -356,7 +356,7 @@ export function StartupEditModal({ startup, isOpen, onClose, onDeleted }: Startu
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-gray-700">Assigned Associate</Label>
+              <Label className="text-xs font-bold text-gray-700">Assigned Portfolio Manager</Label>
               <select
                 value={associateId || ''}
                 onChange={(e) => setAssociateId(e.target.value || null)}

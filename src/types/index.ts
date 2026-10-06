@@ -5,7 +5,7 @@ export interface User {
   email: string;
   role: Role;
   label: string;
-  managerId?: string; // associates only: the Investment Manager they report to
+  managerId?: string; // portfolio managers only: the Portfolio Head they report to
 }
 
 export type Sector = 'AI_ML' | 'MEDTECH' | 'AGRITECH' | 'CYBERSECURITY' | 'UAV' | 'SEMICONDUCTOR' | 'ADVANCED_MATERIALS';
@@ -26,8 +26,8 @@ export interface Startup {
   foundedOn: string;
   website?: string;
   city: string;
-  managerId: string; // owning Investment Manager
-  associateId: string | null; // assigned Investment Associate (must report to managerId)
+  managerId: string; // supervising Portfolio Head
+  associateId: string | null; // assigned Portfolio Manager (must report to managerId)
   trl: number;
   trlUpdatedOn: string;
   ipStatus: IPStatus;
