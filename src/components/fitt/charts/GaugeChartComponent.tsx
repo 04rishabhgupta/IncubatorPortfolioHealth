@@ -20,8 +20,8 @@ export function GaugeChartComponent({
   unit = '%',
 }: GaugeChartProps) {
   const isDanger = dangerAbove ? value >= threshold : value <= threshold;
-  const color = isDanger ? '#B42318' : '#2E7D4F';
-  const bgColor = '#EFF2ED';
+  const color = isDanger ? '#DC2626' : '#16A34A';
+  const bgColor = '#F4F4F5';
 
   // Semi-circle SVG coordinates
   // Radius = 65, stroke = 12
@@ -73,7 +73,7 @@ export function GaugeChartComponent({
       )}
 
       {isDanger && (
-        <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#FDECEA] text-[#B42318] text-[11px] font-bold rounded-full">
+        <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold rounded-full">
           <span>⚠️</span> High Concentration Risk
         </div>
       )}

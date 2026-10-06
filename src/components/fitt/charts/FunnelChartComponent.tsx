@@ -21,11 +21,11 @@ interface FunnelChartProps {
 export function FunnelChartComponent({ stages, cagr, note }: FunnelChartProps) {
   const maxVal = Math.max(...stages.map(s => s.value));
 
-  // Default color palette in Bklit forest/emerald style
+  // Default color palette in Folio OS blue style
   const defaultColors = [
-    '#1E4133', // Deep emerald
-    '#2A624A', // Mid emerald
-    '#3D8365', // Light emerald
+    '#2563EB', // Blue 600
+    '#3B82F6', // Blue 500
+    '#60A5FA', // Blue 400
   ];
 
   return (
@@ -53,7 +53,7 @@ export function FunnelChartComponent({ stages, cagr, note }: FunnelChartProps) {
               </div>
 
               {/* Funnel segment */}
-              <div className="w-full bg-[#EFF2ED] rounded-lg h-9 overflow-hidden p-1 flex items-center relative">
+              <div className="w-full bg-[#F4F4F5] rounded-lg h-9 overflow-hidden p-1 flex items-center relative">
                 <div
                   className="h-full rounded-md transition-all duration-500 ease-out flex items-center justify-end px-3 shadow-xs"
                   style={{
@@ -79,9 +79,9 @@ export function FunnelChartComponent({ stages, cagr, note }: FunnelChartProps) {
       </div>
 
       {(cagr !== undefined || note) && (
-        <div className="mt-2 pt-2 border-t border-[#E3E7E0] flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600">
+        <div className="mt-2 pt-2 border-t border-[#E4E4E7] flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600">
           {cagr !== undefined && (
-            <span className="inline-flex items-center gap-1 bg-[#EAF4EE] text-[#1E4133] font-semibold px-2 py-0.5 rounded-md text-[11px]">
+            <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded-md text-[11px]">
               CAGR {cagr}%
             </span>
           )}

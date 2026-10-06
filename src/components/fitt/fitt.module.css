@@ -2,29 +2,29 @@
    Everything lives under .root so nothing leaks into the rest of the app. */
 
 .root {
-  --brand: #1E4133;
-  --brand-2: #144B3B;
-  --page: #F4F6F9;
-  --card: #fff;
-  --muted: #EFF2ED;
-  --line: #E3E7E0;
-  --text: #111;
-  --text-2: rgba(0, 0, 0, .6);
-  --text-3: rgba(0, 0, 0, .42);
-  --strong: #2E7D4F;
-  --moderate: #B8860B;
-  --watch: #D2691E;
-  --weak: #B42318;
-  --grey: #9AA39D;
-  --warn-bg: #FFF9E6;
-  --warn-line: #F5DFA0;
-  --warn-text: #8A4B08;
-  --danger-bg: #FDECEA;
-  --ok-bg: #EAF4EE;
-  --info-bg: #E8F0FA;
-  --info-text: #1D4E89;
+  --brand: #2563EB;
+  --brand-2: #1D4ED8;
+  --page: #FFFFFF;
+  --card: #FFFFFF;
+  --muted: #F4F4F5;
+  --line: #E4E4E7;
+  --text: #09090B;
+  --text-2: #52525B;
+  --text-3: #71717A;
+  --strong: #16A34A;
+  --moderate: #D97706;
+  --watch: #EA580C;
+  --weak: #DC2626;
+  --grey: #71717A;
+  --warn-bg: #FEF3C7;
+  --warn-line: #FDE68A;
+  --warn-text: #B45309;
+  --danger-bg: #FEE2E2;
+  --ok-bg: #DCFCE7;
+  --info-bg: #EFF6FF;
+  --info-text: #1D4ED8;
 
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--text);
   font-size: 14px;
 }
@@ -43,27 +43,28 @@
 }
 
 .lbl {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .03em;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .04em;
   text-transform: uppercase;
-  color: var(--text-2);
-  margin: 0 0 10px;
+  color: var(--text);
+  margin: 0 0 14px;
 }
 
 .note {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-3);
 }
 
 .chip {
   display: inline-block;
-  font-size: 12px;
-  padding: 3px 9px;
+  font-size: 13px;
+  padding: 4px 11px;
   border: 1px solid var(--line);
   border-radius: 999px;
   margin: 6px 4px 0 0;
   background: #fff;
+  font-weight: 500;
 }
 
 .chipInfo {
@@ -86,34 +87,43 @@
 }
 
 .kpis {
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .kpi {
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 14px 16px;
+  padding: 20px 22px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
 }
 
 .kpi span {
   display: block;
-  font-size: 12px;
-  color: var(--text-2);
-  text-transform: uppercase;
-  letter-spacing: .03em;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: -0.02em;
 }
 
 .kpi b {
   display: block;
-  font-size: 26px;
-  font-weight: 800;
-  margin: 4px 0 2px;
+  font-family: var(--font-neue-montreal), var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--type-metric, clamp(2.625rem, 3.8vw, 3.125rem)) !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em !important;
+  margin: 10px 0 6px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  color: #09090B;
+  line-height: 1.05 !important;
 }
 
 .kpi small {
-  font-size: 12px;
-  color: var(--text-2);
+  font-size: 13px;
+  color: #71717A;
+  font-weight: 500;
 }
 
 .tabs {
@@ -627,9 +637,9 @@
 .tchipOk { background: var(--ok-bg); color: var(--strong); }
 .tchipHold { background: var(--danger-bg); color: var(--weak); }
 
-.stPending { background: #9AA39D; }
-.stIn { background: #B8860B; }
-.stDone { background: #2E7D4F; }
+.stPending { background: #A1A1AA; }
+.stIn { background: var(--warn); }
+.stDone { background: var(--strong); }
 
 .conn {
   display: inline-flex;

@@ -47,7 +47,7 @@ export function CompanyFundingTab({ tracker }: { tracker: FittTracker }) {
               label: f.label,
               value: f.amountCr,
               max: b.fundingWidthDenominatorCr,
-              color: f.kind === 'GRANT' ? '#2E7D4F' : f.kind === 'SIGNING' ? '#9AA39D' : '#1E4133',
+              color: f.kind === 'GRANT' ? '#16A34A' : f.kind === 'SIGNING' ? '#A1A1AA' : '#2563EB',
               unit: ' Cr',
               badge: f.kind === 'GRANT' ? 'Grant' : f.kind === 'SIGNING' ? 'Signing' : 'Equity',
             }))}

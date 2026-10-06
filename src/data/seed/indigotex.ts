@@ -23,13 +23,13 @@ const fittTracker: FittTracker = {
       { name: 'Dilip Singh', role: 'Co-founder and CMO', commitment: 'FULL_TIME', note: 'Arvind, Mafatlal, Raymond · not an MCA director' }
     ],
     capTable: [
-      { holder: 'Satendra', pct: 65.43, color: '#1E4133' },
-      { holder: 'Butola', pct: 10.35, color: '#2E7D4F' },
-      { holder: 'Dilip', pct: 6.73, color: '#7FB08F' },
-      { holder: 'ESOP', pct: 9.5, color: '#9AA39D' },
-      { holder: 'FITT', pct: 3.8, color: '#B8860B' },
-      { holder: 'SIDBI', pct: 3.33, color: '#E3B54A' },
-      { holder: 'BMU', pct: 0.86, color: '#D2691E' }
+      { holder: 'Satendra', pct: 65.43, color: '#2563EB' },
+      { holder: 'Butola', pct: 10.35, color: '#4F46E5' },
+      { holder: 'Dilip', pct: 6.73, color: '#7C3AED' },
+      { holder: 'ESOP', pct: 9.5, color: '#A1A1AA' },
+      { holder: 'FITT', pct: 3.8, color: '#D97706' },
+      { holder: 'SIDBI', pct: 3.33, color: '#06B6D4' },
+      { holder: 'BMU', pct: 0.86, color: '#EA580C' }
     ],
     capTableNote: "Founders' table in the sheet swaps Butola and Dilip's %; cap table summary used.",
     funding: [
@@ -47,11 +47,11 @@ const fittTracker: FittTracker = {
     previousPreMoneyCr: 22,
     currentPreMoneyCr: 20,
     useOfFunds: [
-      { label: 'IP and certification', pct: 27, color: '#1E4133' },
-      { label: 'Working capital', pct: 22, color: '#2E7D4F' },
-      { label: 'R&D', pct: 18, color: '#B8860B' },
-      { label: 'Capex', pct: 17, color: '#9AA39D' },
-      { label: 'Marketing', pct: 16, color: '#D2691E' }
+      { label: 'IP and certification', pct: 27, color: '#2563EB' },
+      { label: 'Working capital', pct: 22, color: '#16A34A' },
+      { label: 'R&D', pct: 18, color: '#7C3AED' },
+      { label: 'Capex', pct: 17, color: '#A1A1AA' },
+      { label: 'Marketing', pct: 16, color: '#D97706' }
     ]
   },
   monthlyCheckins: [

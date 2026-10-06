@@ -45,14 +45,14 @@ export function StrategyTab({ tracker }: { tracker: FittTracker }) {
           ))}
         </div>
 
-        <div className="mt-4 pt-3 border-t border-[#E3E7E0]">
+        <div className="mt-4 pt-3 border-t border-[#E4E4E7]">
           <p className={styles.lbl}>Value chain performance breakdown</p>
           <HorizontalBarChartComponent
             data={tracker.valueChain.map((v, i) => ({
               label: `${i + 1}. ${v.stage}`,
               value: v.score,
               max: v.max,
-              color: v.bottleneck ? '#B42318' : (v.score >= 4 ? '#2E7D4F' : '#B8860B'),
+              color: v.bottleneck ? '#DC2626' : (v.score >= 4 ? '#16A34A' : '#D97706'),
               badge: v.bottleneck ? 'Bottleneck' : undefined,
             }))}
             height={220}

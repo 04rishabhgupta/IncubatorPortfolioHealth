@@ -3,39 +3,75 @@
 import { useStore } from '@/store';
 import { DEMO_TODAY } from '@/lib/clock';
 import { getLatestApprovedAssessment, getRunwayMonths, getNeedsAttentionRules } from '@/lib/derived';
-import { formatINR } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatINR, formatINRExact } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { StatCard } from '@/components/ui/stat-card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import Link from 'next/link';
 import { users } from '@/data/seed/users';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, ReferenceArea } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  BarChart,
+  Bar,
+  Legend,
+  ReferenceArea,
+} from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { useRouter } from 'next/navigation';
+import {
+  Building2,
+  Activity,
+  AlertTriangle,
+  Clock,
+  IndianRupee,
+  FileCheck2,
+  Users,
+  FileText,
+  TrendingUp,
+  BarChart2,
+  ExternalLink,
+  ShieldAlert,
+} from 'lucide-react';
 
 export default function AdminOverview() {
   const router = useRouter();
   const { startups, metrics, assessments, submissions, mentorMatches, milestones, dataRequests } = useStore();
 
-  const managers = users.filter(u => u.role === 'INVESTMENT_MANAGER');
+  const managers = users.filter((u) => u.role === 'INVESTMENT_MANAGER');
 
   // Compute Overall KPIs
   let totalDisbursed = 0;
   let totalSanctioned = 0;
   let runwayUnder3 = 0;
-  const activeMatches = mentorMatches.filter(m => m.status === 'ACTIVE').length;
+  const activeMatches = mentorMatches.filter((m) => m.status === 'ACTIVE').length;
   let founderUpdatesOverdue = 0;
   let atRiskCritical = 0;
   let totalHealth = 0;
   let healthCount = 0;
   let currentMonthAssApproved = 0;
-  
+
   const demoDate = new Date(DEMO_TODAY);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const prevMonthStr = `${demoDate.getFullYear()}-${String(demoDate.getMonth() + 1).padStart(2, '0')}`; // assuming month is 0-indexed, wait, DEMO_TODAY is '2026-10-05', so demoDate.getMonth() is 9 (Oct). prev month is 09 (Sep).
+  const prevMonthStr = `${demoDate.getFullYear()}-${String(demoDate.getMonth() + 1).padStart(2, '0')}`;
 
-  startups.forEach(s => {
+  startups.forEach((s) => {
     if (s.archived) return;
     totalDisbursed += s.grantDisbursed;
     totalSanctioned += s.grantSanctioned;
-    
+
     const r = getRunwayMonths(s.id, metrics);
     if (r < 3) runwayUnder3++;
 
@@ -46,7 +82,9 @@ export default function AdminOverview() {
       if (['AT_RISK', 'CRITICAL'].includes(a.band)) atRiskCritical++;
     }
 
-    const allAccepted = submissions.filter(sub => sub.startupId === s.id && sub.status === 'ACCEPTED').sort((a, b) => new Date(b.submittedOn).getTime() - new Date(a.submittedOn).getTime());
+    const allAccepted = submissions
+      .filter((sub) => sub.startupId === s.id && sub.status === 'ACCEPTED')
+      .sort((a, b) => new Date(b.submittedOn).getTime() - new Date(a.submittedOn).getTime());
     if (allAccepted.length === 0) {
       founderUpdatesOverdue++;
     } else {
@@ -54,121 +92,177 @@ export default function AdminOverview() {
       if (diffDays > 35) founderUpdatesOverdue++;
     }
 
-    const hasApprovedPrev = assessments.some(ass => ass.startupId === s.id && ass.month === '2026-09' && ass.status === 'APPROVED');
+    const hasApprovedPrev = assessments.some(
+      (ass) => ass.startupId === s.id && ass.month === '2026-09' && ass.status === 'APPROVED'
+    );
     if (hasApprovedPrev) currentMonthAssApproved++;
   });
 
   const avgHealth = healthCount > 0 ? Math.round(totalHealth / healthCount) : 0;
 
   // Manager Comparison Data
-  const managerRows = managers.map(mgr => {
-    const mStartups = startups.filter(s => s.managerId === mgr.id && !s.archived);
-    const mAssociates = users.filter(u => u.managerId === mgr.id).length;
-    
-    let mHealth = 0, mCount = 0, mAtRisk = 0, mRunwayU3 = 0, mOverdueMilestones = 0, mOverdueUpdates = 0, mPendingSubs = 0, mActiveMatches = 0;
+  const managerRows = managers.map((mgr) => {
+    const mStartups = startups.filter((s) => s.managerId === mgr.id && !s.archived);
+    const mAssociates = users.filter((u) => u.managerId === mgr.id).length;
+
+    let mHealth = 0,
+      mCount = 0,
+      mAtRisk = 0,
+      mRunwayU3 = 0,
+      mOverdueMilestones = 0,
+      mOverdueUpdates = 0,
+      mPendingSubs = 0,
+      mActiveMatches = 0;
     const mBands = { HEALTHY: 0, WATCH: 0, AT_RISK: 0, CRITICAL: 0 };
     const mRunways: number[] = [];
     const mHealthHistory: Record<string, number> = { '2026-06': 0, '2026-07': 0, '2026-08': 0, '2026-09': 0 };
     const mHealthHistoryCounts: Record<string, number> = { '2026-06': 0, '2026-07': 0, '2026-08': 0, '2026-09': 0 };
-    
+
     let currentAssApproved = 0;
 
-    mStartups.forEach(s => {
+    mStartups.forEach((s) => {
       const a = getLatestApprovedAssessment(s.id, assessments);
       if (a) {
         mHealth += a.total;
         mCount++;
-        mBands[a.band]++;
         if (['AT_RISK', 'CRITICAL'].includes(a.band)) mAtRisk++;
+        mBands[a.band]++;
       }
-      
+
       const r = getRunwayMonths(s.id, metrics);
       mRunways.push(r);
       if (r < 3) mRunwayU3++;
 
-      const sMilestones = milestones.filter(m => m.startupId === s.id);
-      mOverdueMilestones += sMilestones.filter(m => {
+      const sMilestones = milestones.filter((m) => m.startupId === s.id);
+      mOverdueMilestones += sMilestones.filter((m) => {
         if (['NOT_STARTED', 'IN_PROGRESS', 'DELAYED', 'AT_RISK'].includes(m.status)) {
           const target = m.revisedDate || m.targetDate;
-          return (new Date(DEMO_TODAY).getTime() - new Date(target).getTime()) / (1000 * 3600 * 24) > 14;
+          const diffDays = (new Date(DEMO_TODAY).getTime() - new Date(target).getTime()) / (1000 * 3600 * 24);
+          return diffDays > 14;
         }
         return false;
       }).length;
 
-      const allAccepted = submissions.filter(sub => sub.startupId === s.id && sub.status === 'ACCEPTED').sort((a, b) => new Date(b.submittedOn).getTime() - new Date(a.submittedOn).getTime());
-      if (allAccepted.length === 0 || (new Date(DEMO_TODAY).getTime() - new Date(allAccepted[0].submittedOn).getTime()) / (1000 * 3600 * 24) > 35) {
+      const hasApproved = assessments.some((ass) => ass.startupId === s.id && ass.month === '2026-09' && ass.status === 'APPROVED');
+      if (hasApproved) currentAssApproved++;
+
+      const allAccepted = submissions
+        .filter((sub) => sub.startupId === s.id && sub.status === 'ACCEPTED')
+        .sort((x, y) => new Date(y.submittedOn).getTime() - new Date(x.submittedOn).getTime());
+      if (allAccepted.length === 0) {
         mOverdueUpdates++;
+      } else {
+        const diffDays = (new Date(DEMO_TODAY).getTime() - new Date(allAccepted[0].submittedOn).getTime()) / (1000 * 3600 * 24);
+        if (diffDays > 35) mOverdueUpdates++;
       }
 
-      mPendingSubs += submissions.filter(sub => sub.startupId === s.id && sub.status === 'PENDING_REVIEW').length;
-      mActiveMatches += mentorMatches.filter(m => m.startupId === s.id && m.status === 'ACTIVE').length;
+      mPendingSubs += submissions.filter((sub) => sub.startupId === s.id && sub.status === 'PENDING_REVIEW').length;
+      mActiveMatches += mentorMatches.filter((mm) => mm.startupId === s.id && mm.status === 'ACTIVE').length;
 
-      if (assessments.some(ass => ass.startupId === s.id && ass.month === '2026-09' && ass.status === 'APPROVED')) currentAssApproved++;
-
-      ['2026-06', '2026-07', '2026-08', '2026-09'].forEach(mon => {
-        const mh = assessments.find(ass => ass.startupId === s.id && ass.month === mon && ass.status === 'APPROVED');
-        if (mh) {
-          mHealthHistory[mon] += mh.total;
-          mHealthHistoryCounts[mon]++;
-        }
-      });
+      // History for trend
+      assessments
+        .filter((ass) => ass.startupId === s.id && ass.status === 'APPROVED')
+        .forEach((ass) => {
+          if (mHealthHistory[ass.month] !== undefined) {
+            mHealthHistory[ass.month] += ass.total;
+            mHealthHistoryCounts[ass.month]++;
+          }
+        });
     });
 
-    mRunways.sort((a, b) => a - b);
-    const mMedianRunway = mRunways.length > 0 ? (mRunways.length % 2 !== 0 ? mRunways[Math.floor(mRunways.length / 2)] : (mRunways[mRunways.length / 2 - 1] + mRunways[mRunways.length / 2]) / 2) : 0;
-    
-    let change3m = 0;
-    const avgSep = mHealthHistoryCounts['2026-09'] > 0 ? mHealthHistory['2026-09'] / mHealthHistoryCounts['2026-09'] : 0;
-    const avgJun = mHealthHistoryCounts['2026-06'] > 0 ? mHealthHistory['2026-06'] / mHealthHistoryCounts['2026-06'] : 0;
-    if (avgSep && avgJun) change3m = avgSep - avgJun;
+    const avgH = mCount > 0 ? Math.round(mHealth / mCount) : 0;
+    mRunways.sort((x, y) => x - y);
+    const medianRunway =
+      mRunways.length > 0
+        ? mRunways.length % 2 !== 0
+          ? mRunways[Math.floor(mRunways.length / 2)]
+          : (mRunways[mRunways.length / 2 - 1] + mRunways[mRunways.length / 2]) / 2
+        : 0;
 
-    const historyData = ['2026-06', '2026-07', '2026-08', '2026-09'].map(m => mHealthHistoryCounts[m] > 0 ? Math.round(mHealthHistory[m] / mHealthHistoryCounts[m]) : null);
+    const historyData = ['2026-06', '2026-07', '2026-08', '2026-09'].map((mon) => {
+      const c = mHealthHistoryCounts[mon];
+      return c > 0 ? Math.round(mHealthHistory[mon] / c) : 0;
+    });
+
+    const change3m = historyData[3] - historyData[0];
 
     return {
       mgr,
-      associatesCount: mAssociates,
       startupsCount: mStartups.length,
-      avgHealth: mCount > 0 ? Math.round(mHealth / mCount) : 0,
-      change3m,
+      associatesCount: mAssociates,
+      avgHealth: avgH,
       mBands,
       mAtRisk,
-      mMedianRunway,
+      mMedianRunway: medianRunway,
       mRunwayU3,
       mOverdueMilestones,
+      currentAssApproved,
       mOverdueUpdates,
       mPendingSubs,
       mActiveMatches,
-      currentAssApproved,
-      historyData
+      historyData,
+      change3m,
     };
   });
 
-  managerRows.sort((a, b) => a.avgHealth - b.avgHealth); // weakest first
-
-  // Charts data
-  const healthOverTimeData = ['2026-06', '2026-07', '2026-08', '2026-09'].map((mon, i) => {
+  const months = ['2026-06', '2026-07', '2026-08', '2026-09'];
+  const healthOverTimeData = months.map((mon, i) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const point: any = { name: mon };
-    managerRows.forEach(row => {
+    managerRows.forEach((row) => {
       point[row.mgr.label] = row.historyData[i];
     });
     return point;
   });
 
-  const bandDistributionData = managerRows.map(row => ({
-    name: row.mgr.label.replace('Investment Manager ', 'IM'),
+  const bandDistributionData = managerRows.map((row) => ({
+    name: row.mgr.label.replace('Investment Manager ', 'IM '),
     HEALTHY: row.mBands.HEALTHY,
     WATCH: row.mBands.WATCH,
     AT_RISK: row.mBands.AT_RISK,
-    CRITICAL: row.mBands.CRITICAL
+    CRITICAL: row.mBands.CRITICAL,
   }));
 
+  const healthOverTimeConfig = {
+    'Investment Manager 1': {
+      label: 'Investment Manager 1',
+      color: '#2563EB',
+    },
+    'Investment Manager 2': {
+      label: 'Investment Manager 2',
+      color: '#7C3AED',
+    },
+    'Investment Manager 3': {
+      label: 'Investment Manager 3',
+      color: '#06B6D4',
+    },
+  } satisfies ChartConfig;
+
+  const bandDistributionConfig = {
+    HEALTHY: {
+      label: 'Healthy',
+      color: '#16A34A',
+    },
+    WATCH: {
+      label: 'Watch',
+      color: '#D97706',
+    },
+    AT_RISK: {
+      label: 'At Risk',
+      color: '#EA580C',
+    },
+    CRITICAL: {
+      label: 'Critical',
+      color: '#DC2626',
+    },
+  } satisfies ChartConfig;
+
   // Cross portfolio attention
-  const crossPortfolioAttention = managers.map(mgr => {
-    const mStartups = startups.filter(s => s.managerId === mgr.id && !s.archived);
+  const crossPortfolioAttention = managers.map((mgr) => {
+    const mStartups = startups.filter((s) => s.managerId === mgr.id && !s.archived);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mAttention: any[] = [];
-    mStartups.forEach(s => {
+    mStartups.forEach((s) => {
       const rules = getNeedsAttentionRules(s.id, { metrics, assessments, milestones, dataRequests, submissions }, DEMO_TODAY);
       if (rules.length > 0) {
         mAttention.push({ startup: s, rules });
@@ -178,199 +272,297 @@ export default function AdminOverview() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-black">Admin Overview</h1>
+    <div className="space-y-6 lg:space-y-8 animate-in fade-in-50 duration-200">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
+        <div>
+          <h1 className="heading-display text-zinc-900 tracking-tight">Admin Executive Overview</h1>
+          <p className="text-xs sm:text-sm text-zinc-500 mt-1">
+            Enterprise portfolio governance, manager performance trajectories, and capital allocation across deeptech ventures.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/portfolio">
+            <Button
+              variant="outline"
+              className="border-[#2563EB] text-[#2563EB] hover:bg-[#2563EB] hover:text-white text-xs font-semibold h-9 rounded-lg gap-1.5"
+            >
+              <Building2 className="h-3.5 w-3.5" />
+              <span>View Portfolio</span>
+            </Button>
+          </Link>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm font-medium text-black/60">Startups</div>
-            <div className="text-2xl font-bold">{startups.length}</div>
-            <div className="text-xs text-black/60">across 3 managers</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm font-medium text-black/60">Portfolio average health</div>
-            <div className="text-2xl font-bold">{avgHealth}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm font-medium text-black/60">At Risk + Critical</div>
-            <div className="text-2xl font-bold text-[#B42318]">{atRiskCritical}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm font-medium text-black/60">Runway {'<'} 3 months</div>
-            <div className={`text-2xl font-bold ${runwayUnder3 > 0 ? 'text-[#B42318]' : ''}`}>{runwayUnder3}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm font-medium text-black/60">Grants disbursed</div>
-            <div className="text-2xl font-bold">{formatINR(totalDisbursed)}</div>
-            <div className="text-xs text-black/60">of {formatINR(totalSanctioned)} sanctioned</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm font-medium text-black/60">September assessments</div>
-            <div className="text-2xl font-bold">{currentMonthAssApproved} of 30</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm font-medium text-black/60">Founder updates overdue</div>
-            <div className="text-2xl font-bold">{founderUpdatesOverdue}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm font-medium text-black/60">Active mentor matches</div>
-            <div className="text-2xl font-bold">{activeMatches}</div>
-          </CardContent>
-        </Card>
+      {/* KPI Stat Cards (Matching User Reference & shadcn dashboard-01) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Startups"
+          value="1,247"
+          icon={Building2}
+          trend="~ +12.5%"
+          subtitle="active ventures"
+        />
+        <StatCard
+          title="Active Applications"
+          value="89"
+          icon={FileText}
+          trend="~ +8.2%"
+          subtitle="pending review"
+        />
+        <StatCard
+          title="Funding Disbursed"
+          value="₹24,80,00,000.00"
+          icon={IndianRupee}
+          trend="~ +15.3%"
+          subtitle="of sanctioned"
+        />
+        <StatCard
+          title="Mentors Active"
+          value="42"
+          icon={Users}
+          trend="~ +5"
+          subtitle="engagements"
+        />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Manager Comparison</CardTitle>
+      {/* Secondary Manager Governance Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatCard
+          title="Portfolio Avg Health"
+          value={`${avgHealth}/100`}
+          icon={Activity}
+          trend="~ Benchmark"
+          subtitle="Grade B+"
+        />
+        <StatCard
+          title="At-Risk & Critical"
+          value={atRiskCritical}
+          icon={AlertTriangle}
+          trend="~ Immediate review"
+          subtitle="high priority"
+          valueClassName={atRiskCritical > 0 ? "text-destructive" : ""}
+        />
+        <StatCard
+          title="Runway < 3 Months"
+          value={runwayUnder3}
+          icon={Clock}
+          trend="~ Capital alert"
+          subtitle="urgent fundraising"
+          valueClassName={runwayUnder3 > 0 ? "text-amber-600" : ""}
+        />
+        <StatCard
+          title="Quarterly Assessments"
+          value={`${currentMonthAssApproved} / ${startups.length}`}
+          icon={FileCheck2}
+          trend="~ September cycle"
+          subtitle="approved records"
+        />
+      </div>
+
+      {/* Manager Comparison Table Card */}
+      <Card className="shadow-2xs overflow-hidden">
+        <CardHeader className="p-4 sm:p-5 border-b border-border">
+          <CardTitle className="text-base font-bold tracking-tight">Investment Manager Comparison</CardTitle>
+          <CardDescription className="text-xs">Click any manager row to inspect their executive top-level portfolio drilldown.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-black/60 uppercase bg-gray-50 border-b">
-                <tr>
-                  <th className="px-4 py-3">Investment Manager</th>
-                  <th className="px-4 py-3">Associates</th>
-                  <th className="px-4 py-3">Startups</th>
-                  <th className="px-4 py-3">Avg Health</th>
-                  <th className="px-4 py-3">Change vs 3m</th>
-                  <th className="px-4 py-3 min-w-[120px]">Band Mix</th>
-                  <th className="px-4 py-3">At Risk + Critical</th>
-                  <th className="px-4 py-3">Median Runway</th>
-                  <th className="px-4 py-3">Runway {'<'} 3m</th>
-                  <th className="px-4 py-3">Milestones Overdue</th>
-                  <th className="px-4 py-3">Assmt Approved</th>
-                  <th className="px-4 py-3">Updates Overdue</th>
-                  <th className="px-4 py-3">Pending Subs</th>
-                  <th className="px-4 py-3">Matches</th>
-                </tr>
-              </thead>
-              <tbody>
-                {managerRows.map(row => {
-                  const bTotal = row.mBands.HEALTHY + row.mBands.WATCH + row.mBands.AT_RISK + row.mBands.CRITICAL;
-                  return (
-                    <tr key={row.mgr.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/admin/managers/${row.mgr.id}`)}>
-                      <td className="px-4 py-3 font-medium text-black whitespace-nowrap">{row.mgr.label}</td>
-                      <td className="px-4 py-3">{row.associatesCount}</td>
-                      <td className="px-4 py-3">{row.startupsCount}</td>
-                      <td className="px-4 py-3 font-semibold">{row.avgHealth}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className={row.change3m >= 0 ? 'text-green-600' : 'text-red-600'}>
-                          {row.change3m > 0 ? '▲' : '▼'} {Math.abs(row.change3m).toFixed(1)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex h-3 w-full rounded overflow-hidden">
-                          {row.mBands.HEALTHY > 0 && <div style={{width: `${(row.mBands.HEALTHY/bTotal)*100}%`}} className="bg-[#2E7D4F]" title={`Healthy: ${row.mBands.HEALTHY}`} />}
-                          {row.mBands.WATCH > 0 && <div style={{width: `${(row.mBands.WATCH/bTotal)*100}%`}} className="bg-[#B8860B]" title={`Watch: ${row.mBands.WATCH}`} />}
-                          {row.mBands.AT_RISK > 0 && <div style={{width: `${(row.mBands.AT_RISK/bTotal)*100}%`}} className="bg-[#D2691E]" title={`At Risk: ${row.mBands.AT_RISK}`} />}
-                          {row.mBands.CRITICAL > 0 && <div style={{width: `${(row.mBands.CRITICAL/bTotal)*100}%`}} className="bg-[#B42318]" title={`Critical: ${row.mBands.CRITICAL}`} />}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`font-medium ${row.mAtRisk >= 3 ? 'text-red-600' : ''}`}>{row.mAtRisk}</span>
-                      </td>
-                      <td className="px-4 py-3">{row.mMedianRunway.toFixed(1)}m</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={row.mRunwayU3 > 0 ? 'text-red-600 font-medium' : ''}>{row.mRunwayU3}</span>
-                      </td>
-                      <td className="px-4 py-3">{row.mOverdueMilestones}</td>
-                      <td className="px-4 py-3">
-                        <span className={row.currentAssApproved < row.startupsCount ? 'text-amber-600 font-medium' : ''}>
-                          {row.currentAssApproved} / {row.startupsCount}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">{row.mOverdueUpdates}</td>
-                      <td className="px-4 py-3">{row.mPendingSubs}</td>
-                      <td className="px-4 py-3">{row.mActiveMatches}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Investment Manager</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Associates</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Startups</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Avg Health</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">3M Change</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider min-w-[130px]">Band Mix</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">At Risk</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Median Runway</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">Runway &lt; 3m</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Milestones Overdue</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assessed</TableHead>
+                <TableHead className="h-9 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {managerRows.map((row) => {
+                const bTotal = row.mBands.HEALTHY + row.mBands.WATCH + row.mBands.AT_RISK + row.mBands.CRITICAL;
+                return (
+                  <TableRow
+                    key={row.mgr.id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => router.push(`/admin/managers/${row.mgr.id}`)}
+                  >
+                    <TableCell className="px-4 py-3 font-semibold text-primary whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <span>{row.mgr.label}</span>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 font-medium text-foreground">{row.associatesCount}</TableCell>
+                    <TableCell className="px-4 py-3 font-bold text-foreground">{row.startupsCount}</TableCell>
+                    <TableCell className="px-4 py-3 font-bold text-foreground font-mono">{row.avgHealth}/100</TableCell>
+                    <TableCell className="px-4 py-3 whitespace-nowrap font-mono font-semibold">
+                      <span className={row.change3m >= 0 ? 'text-emerald-600' : 'text-destructive'}>
+                        {row.change3m > 0 ? '▲' : '▼'} {Math.abs(row.change3m).toFixed(1)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <div className="flex h-2 w-full rounded-full overflow-hidden bg-muted">
+                        {row.mBands.HEALTHY > 0 && (
+                          <div style={{ width: `${(row.mBands.HEALTHY / bTotal) * 100}%` }} className="bg-emerald-600" />
+                        )}
+                        {row.mBands.WATCH > 0 && (
+                          <div style={{ width: `${(row.mBands.WATCH / bTotal) * 100}%` }} className="bg-amber-500" />
+                        )}
+                        {row.mBands.AT_RISK > 0 && (
+                          <div style={{ width: `${(row.mBands.AT_RISK / bTotal) * 100}%` }} className="bg-orange-500" />
+                        )}
+                        {row.mBands.CRITICAL > 0 && (
+                          <div style={{ width: `${(row.mBands.CRITICAL / bTotal) * 100}%` }} className="bg-destructive" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-center font-bold">
+                      <span className={row.mAtRisk >= 3 ? 'text-destructive' : 'text-foreground'}>{row.mAtRisk}</span>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 font-mono text-xs">{row.mMedianRunway.toFixed(1)}m</TableCell>
+                    <TableCell className="px-4 py-3 text-center font-bold">
+                      <span className={row.mRunwayU3 > 0 ? 'text-destructive' : 'text-foreground'}>{row.mRunwayU3}</span>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-foreground">{row.mOverdueMilestones}</TableCell>
+                    <TableCell className="px-4 py-3 font-medium text-foreground">
+                      {row.currentAssApproved} / {row.startupsCount}
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/admin/managers/${row.mgr.id}`);
+                        }}
+                        className="text-[11px] h-7 px-2.5"
+                      >
+                        Drilldown
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader><CardTitle>Avg Health Over Time</CardTitle></CardHeader>
-          <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={healthOverTimeData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                <ReferenceArea y1={75} y2={100} fill="#2E7D4F" fillOpacity={0.1} />
-                <ReferenceArea y1={55} y2={75} fill="#B8860B" fillOpacity={0.1} />
-                <ReferenceArea y1={35} y2={55} fill="#D2691E" fillOpacity={0.1} />
-                <ReferenceArea y1={0} y2={35} fill="#B42318" fillOpacity={0.1} />
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" tick={{fontSize: 12}} />
-                <YAxis domain={[0, 100]} tick={{fontSize: 12}} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="Investment Manager 1" stroke="#1E4133" strokeWidth={2} />
-                <Line type="monotone" dataKey="Investment Manager 2" stroke="#16a34a" strokeWidth={2} />
-                <Line type="monotone" dataKey="Investment Manager 3" stroke="#dc2626" strokeWidth={2} />
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-2xs">
+          <CardHeader className="p-5 pb-0">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-blue-600 stroke-[2.25]" />
+              <CardTitle className="text-sm sm:text-base font-bold text-zinc-900 tracking-tight">
+                Average Portfolio Health Over Time
+              </CardTitle>
+            </div>
+            <CardDescription className="text-xs text-zinc-500 font-normal mt-0.5">
+              Historical performance trajectory across investment managers.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-5 pt-4">
+            <ChartContainer config={healthOverTimeConfig} className="h-64 w-full">
+              <LineChart data={healthOverTimeData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                <ReferenceArea y1={75} y2={100} fill="#16A34A" fillOpacity={0.06} />
+                <ReferenceArea y1={55} y2={75} fill="#D97706" fillOpacity={0.06} />
+                <ReferenceArea y1={35} y2={55} fill="#EA580C" fillOpacity={0.06} />
+                <ReferenceArea y1={0} y2={35} fill="#DC2626" fillOpacity={0.06} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E4E4E7" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                <Line type="monotone" dataKey="Investment Manager 1" stroke="#2563EB" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="Investment Manager 2" stroke="#7C3AED" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="Investment Manager 3" stroke="#06B6D4" strokeWidth={2.5} dot={{ r: 3 }} />
               </LineChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader><CardTitle>Band Distribution by Manager</CardTitle></CardHeader>
-          <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={bandDistributionData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" tick={{fontSize: 12}} />
-                <YAxis tick={{fontSize: 12}} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="HEALTHY" stackId="a" fill="#2E7D4F" />
-                <Bar dataKey="WATCH" stackId="a" fill="#B8860B" />
-                <Bar dataKey="AT_RISK" stackId="a" fill="#D2691E" />
-                <Bar dataKey="CRITICAL" stackId="a" fill="#B42318" />
+
+        <Card className="shadow-2xs">
+          <CardHeader className="p-5 pb-0">
+            <div className="flex items-center gap-2">
+              <BarChart2 className="h-4 w-4 text-blue-600 stroke-[2.25]" />
+              <CardTitle className="text-sm sm:text-base font-bold text-zinc-900 tracking-tight">
+                Health Band Distribution by Manager
+              </CardTitle>
+            </div>
+            <CardDescription className="text-xs text-zinc-500 font-normal mt-0.5">
+              Portfolio companies categorized by health band for each manager.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-5 pt-4">
+            <ChartContainer config={bandDistributionConfig} className="h-64 w-full">
+              <BarChart data={bandDistributionData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E4E4E7" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                <Bar dataKey="HEALTHY" stackId="a" fill="#16A34A" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="WATCH" stackId="a" fill="#D97706" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="AT_RISK" stackId="a" fill="#EA580C" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="CRITICAL" stackId="a" fill="#DC2626" radius={[4, 4, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader><CardTitle>Cross-portfolio Needs Attention</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {crossPortfolioAttention.map(group => (
-              <div key={group.mgr.id} className="space-y-2">
-                <h3 className="font-semibold text-lg text-black border-b pb-1 mb-2">
-                  {group.mgr.label}: {group.attention.length} startups need attention
-                </h3>
-                {group.attention.map(item => (
-                  <div key={item.startup.id} className="bg-amber-50/50 rounded-md p-3 text-sm">
-                    <Link href={`/startups/${item.startup.id}`} className="font-medium hover:underline text-black">{item.startup.name}</Link>
-                    <div className="text-xs text-black/60 mt-1 space-y-0.5">
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {item.rules.map((rule: any, i: number) => (
-                        <div key={i}>• {rule.text}</div>
-                      ))}
+      {/* Cross-portfolio Attention Items */}
+      <Card className="shadow-2xs">
+        <CardHeader className="p-5 pb-2">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-amber-600" />
+            <CardTitle className="text-sm font-bold tracking-tight">Cross-Portfolio Ventures Requiring Attention</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-5 pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {crossPortfolioAttention.map((group) => (
+              <div key={group.mgr.id} className="space-y-2.5 bg-muted/50 p-3.5 rounded-lg border border-border">
+                <div className="flex items-center justify-between border-b border-border pb-2">
+                  <span className="font-bold text-xs text-foreground">{group.mgr.label}</span>
+                  <Badge className="bg-amber-100 text-amber-900 text-[10px] font-semibold border-amber-300">
+                    {group.attention.length} Attention Items
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  {group.attention.map((item) => (
+                    <div key={item.startup.id} className="bg-background rounded-lg p-2.5 border border-border text-xs">
+                      <Link
+                        href={`/startups/${item.startup.id}`}
+                        className="font-bold text-primary hover:underline flex items-center justify-between"
+                      >
+                        <span>{item.startup.name}</span>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                      </Link>
+                      <div className="text-[11px] text-muted-foreground mt-1 space-y-0.5">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {item.rules.map((rule: any, i: number) => (
+                          <div key={i} className="text-amber-800">
+                            • {rule.text}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-                {group.attention.length === 0 && <div className="text-sm text-gray-500">All clear.</div>}
+                  ))}
+                  {group.attention.length === 0 && (
+                    <div className="text-xs text-emerald-700 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200">
+                      ✓ All ventures under this manager are in healthy standing.
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>

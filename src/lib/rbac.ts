@@ -28,6 +28,7 @@ export type Action =
   | 'view_portfolio'
   | 'view_startup'
   | 'create_startup'
+  | 'delete_startup'
   | 'archive_startup'
   | 'reassign_manager'
   | 'assign_associate'
@@ -51,12 +52,22 @@ export type Action =
 export function can(user: User, action: Action, startup?: Startup): boolean {
   switch (action) {
     case 'admin_overview':
-    case 'create_startup':
-    case 'archive_startup':
     case 'reassign_manager':
     case 'manage_users':
     case 'admin_settings':
       return user.role === 'ADMIN';
+
+    case 'create_startup':
+      return user.role === 'ADMIN' || user.role === 'INVESTMENT_MANAGER';
+
+    case 'archive_startup':
+    case 'delete_startup':
+      if (user.role === 'ADMIN') return true;
+      if (user.role === 'INVESTMENT_MANAGER') {
+        if (!startup) return true;
+        return startup.managerId === user.id;
+      }
+      return false;
 
     case 'view_portfolio':
       return true;
@@ -77,19 +88,24 @@ export function can(user: User, action: Action, startup?: Startup): boolean {
     case 'edit_startup':
     case 'send_data_request':
     case 'review_submission':
-    case 'draft_assessment':
     case 'create_mentor_request':
     case 'recommend_mentor':
+    case 'confirm_mentor':
     case 'log_mentor_session':
     case 'action_insights':
       if (!startup) return false;
-      if (user.role === 'ADMIN') return false; // Admin is read-only
+      if (user.role === 'ADMIN') return true;
+      if (user.role === 'INVESTMENT_MANAGER') return startup.managerId === user.id;
+      if (user.role === 'INVESTMENT_ASSOCIATE') return startup.associateId === user.id;
+      return false;
+
+    case 'draft_assessment':
+      if (!startup) return false;
       if (user.role === 'INVESTMENT_MANAGER') return startup.managerId === user.id;
       if (user.role === 'INVESTMENT_ASSOCIATE') return startup.associateId === user.id;
       return false;
 
     case 'approve_assessment':
-    case 'confirm_mentor':
       if (!startup) return false;
       if (user.role === 'INVESTMENT_MANAGER') return startup.managerId === user.id;
       return false;

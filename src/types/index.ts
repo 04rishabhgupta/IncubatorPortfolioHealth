@@ -39,6 +39,43 @@ export interface Startup {
   archived: boolean;
   regTags: RegTag[];
   fittTracker?: FittTracker;
+  investibility?: InvestibilityScore;
+  aiAnalysis?: {
+    summary: string;
+    thesis: string;
+    redFlags: string[];
+    actionItems: string[];
+    lastAnalyzed: string;
+  };
+}
+
+export interface InvestibilityScore {
+  total: number; // 0 - 100
+  grade: 'A+' | 'A' | 'B' | 'C' | 'D';
+  breakdown: {
+    teamScore: number; // max 20
+    marketScore: number; // max 25
+    technologyScore: number; // max 20
+    financialScore: number; // max 20
+    tractionScore: number; // max 15
+  };
+  strengths: string[];
+  risks: string[];
+  recommendation: string;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'MENTOR_REQUEST' | 'MENTOR_MATCH' | 'MENTOR_RESPONSE' | 'STARTUP_UPDATE' | 'RED_FLAG' | 'DATA_REQUEST';
+  startupId?: string;
+  startupName?: string;
+  createdAt: string;
+  read: boolean;
+  targetRole?: Role;
+  targetUserId?: string; // manager or associate
+  actionUrl?: string;
 }
 
 // ---- FITT tracker (Indigotex-style real-company data model) ----

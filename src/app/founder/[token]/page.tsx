@@ -25,7 +25,7 @@ export default function FounderPortal() {
   
   if (!startup) {
     return (
-      <div className="min-h-screen bg-[#F4F6F9] flex flex-col items-center justify-center p-8 text-center">
+      <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center p-8 text-center">
         <h1 className="text-4xl font-bold text-black mb-4">404</h1>
         <p className="text-xl text-black/60">Invalid token or startup not found.</p>
       </div>
@@ -79,17 +79,17 @@ export default function FounderPortal() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9] p-4 md:p-8">
+    <div className="min-h-screen bg-[#FAFAFA] p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-lg shadow-sm border">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-2xs border border-zinc-200">
           <div>
-            <h1 className="text-3xl font-bold text-black">Founder Portal: {startup.name}</h1>
-            <p className="text-black/60 mt-1">Welcome back. Keep your profile updated.</p>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-900 tracking-tight">Founder Portal: {startup.name}</h1>
+            <p className="text-zinc-500 text-sm mt-1">Welcome back. Keep your profile updated and upload operating metrics.</p>
           </div>
           <div className="mt-4 md:mt-0">
-            <Badge variant="outline" className="text-lg py-1 px-3 bg-blue-50 border-blue-200 text-blue-800">
+            <Badge variant="outline" className="text-sm py-1 px-3 bg-blue-50 border-blue-200 text-blue-700 font-semibold">
               {startup.stage.replace('_', ' ')} • TRL {startup.trl}
             </Badge>
           </div>
@@ -97,54 +97,54 @@ export default function FounderPortal() {
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
+          <Card className="border-zinc-200 shadow-2xs">
             <CardContent className="p-4">
-              <div className="text-sm font-medium text-black/60">Runway</div>
-              <div className={`text-2xl font-bold ${runway < 3 ? 'text-[#B42318]' : ''}`}>{runway.toFixed(1)}m</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">Runway</div>
+              <div className={`text-2xl font-black font-mono mt-1 ${runway < 3 ? 'text-red-600' : 'text-zinc-900'}`}>{runway.toFixed(1)}m</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-zinc-200 shadow-2xs">
             <CardContent className="p-4">
-              <div className="text-sm font-medium text-black/60">Health Band</div>
-              <div className="text-2xl font-bold">
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">Health Band</div>
+              <div className="text-2xl font-black font-mono mt-1">
                 {latestAss ? (
-                  <span className={latestAss.band === 'HEALTHY' ? 'text-[#2E7D4F]' : latestAss.band === 'WATCH' ? 'text-[#B8860B]' : latestAss.band === 'AT_RISK' ? 'text-[#D2691E]' : 'text-[#B42318]'}>{latestAss.band}</span>
+                  <span className={latestAss.band === 'HEALTHY' ? 'text-emerald-600' : latestAss.band === 'WATCH' ? 'text-amber-600' : latestAss.band === 'AT_RISK' ? 'text-orange-600' : 'text-red-600'}>{latestAss.band}</span>
                 ) : '-'}
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-zinc-200 shadow-2xs">
             <CardContent className="p-4">
-              <div className="text-sm font-medium text-black/60">Milestones Done</div>
-              <div className="text-2xl font-bold">{sMilestones.filter(m => m.status === 'COMPLETED').length} / {sMilestones.length}</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">Milestones Done</div>
+              <div className="text-2xl font-black font-mono text-zinc-900 mt-1">{sMilestones.filter(m => m.status === 'COMPLETED').length} / {sMilestones.length}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-zinc-200 shadow-2xs">
             <CardContent className="p-4">
-              <div className="text-sm font-medium text-black/60">Active Mentors</div>
-              <div className="text-2xl font-bold">{sMatches.length}</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">Active Mentors</div>
+              <div className="text-2xl font-black font-mono text-zinc-900 mt-1">{sMatches.length}</div>
             </CardContent>
           </Card>
         </div>
 
         {sActionItems.length > 0 && (
-          <Card className="border-amber-200">
-            <CardHeader className="bg-amber-50/50">
-              <CardTitle className="text-black">Action items</CardTitle>
+          <Card className="border-amber-200 shadow-2xs">
+            <CardHeader className="bg-amber-50/50 border-b border-amber-100">
+              <CardTitle className="text-zinc-900 text-lg">Action Items</CardTitle>
               <CardDescription>Shared by your investment team &mdash; please review and act on these.</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
               {sActionItems.map(item => (
-                <div key={item.id} className="border rounded-md p-4">
+                <div key={item.id} className="border border-zinc-200 rounded-lg p-4 bg-white">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg">{item.title}</h3>
-                    <Badge variant="outline">{item.sharedOn}</Badge>
+                    <h3 className="font-bold text-base text-zinc-900">{item.title}</h3>
+                    <Badge variant="outline" className="text-xs font-mono">{item.sharedOn}</Badge>
                   </div>
-                  <div className="text-sm text-black/60 space-y-1">
-                    <div><span className="font-medium text-black/80">Why:</span> {item.cause}</div>
-                    <div><span className="font-medium text-black/80">Effect:</span> {item.effect}</div>
-                    <div><span className="font-medium text-black/80">What to do:</span> {item.fix}</div>
-                    {item.note && <div className="italic mt-1">&ldquo;{item.note}&rdquo;</div>}
+                  <div className="text-sm text-zinc-600 space-y-1">
+                    <div><span className="font-semibold text-zinc-900">Why:</span> {item.cause}</div>
+                    <div><span className="font-semibold text-zinc-900">Effect:</span> {item.effect}</div>
+                    <div><span className="font-semibold text-zinc-900">What to do:</span> {item.fix}</div>
+                    {item.note && <div className="italic text-zinc-500 mt-1">&ldquo;{item.note}&rdquo;</div>}
                   </div>
                 </div>
               ))}
@@ -154,61 +154,61 @@ export default function FounderPortal() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Data Requests */}
-          <Card className="border-blue-200">
-            <CardHeader className="bg-blue-50/50">
-              <CardTitle className="text-black">Data Requests</CardTitle>
+          <Card className="border-zinc-200 shadow-2xs">
+            <CardHeader className="bg-blue-50/50 border-b border-blue-100">
+              <CardTitle className="text-zinc-900 text-lg">Data Requests</CardTitle>
               <CardDescription>Provide requested metrics to your investment team.</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
               {openRequests.length === 0 ? (
-                <div className="text-center py-8 text-black/60">You have no open data requests!</div>
+                <div className="text-center py-8 text-zinc-500">You have no open data requests!</div>
               ) : (
                 openRequests.map(req => (
-                  <div key={req.id} className="border rounded-md p-4">
+                  <div key={req.id} className="border border-zinc-200 rounded-lg p-4 bg-white">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="font-bold text-lg">{req.title}</h3>
-                        <p className="text-sm text-black/60">Due: <span className="font-medium text-red-600">{req.dueDate}</span></p>
+                        <h3 className="font-bold text-base text-zinc-900">{req.title}</h3>
+                        <p className="text-sm text-zinc-500">Due: <span className="font-semibold text-red-600">{req.dueDate}</span></p>
                       </div>
-                      <Badge variant="outline">{req.type.replace('_', ' ')}</Badge>
+                      <Badge variant="outline" className="text-xs">{req.type.replace('_', ' ')}</Badge>
                     </div>
 
                     {req.type === 'MONTHLY_FINANCIALS' && (
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label>Cash Balance (₹)</Label>
+                          <Label className="text-xs font-semibold text-zinc-700">Cash Balance (₹)</Label>
                           <Input type="number" placeholder="e.g. 5000000" value={finForm.cashBalance} onChange={e => setFinForm({...finForm, cashBalance: e.target.value})} />
                         </div>
                         <div className="space-y-2">
-                          <Label>Monthly Revenue (₹)</Label>
+                          <Label className="text-xs font-semibold text-zinc-700">Monthly Revenue (₹)</Label>
                           <Input type="number" placeholder="e.g. 100000" value={finForm.monthlyRevenue} onChange={e => setFinForm({...finForm, monthlyRevenue: e.target.value})} />
                         </div>
-                        <Button className="w-full bg-[#1E4133] text-white hover:bg-[#144B3B]" onClick={() => handleFinancialSubmit(req)}>Submit Financials</Button>
+                        <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold" onClick={() => handleFinancialSubmit(req)}>Submit Financials</Button>
                       </div>
                     )}
 
                     {req.type === 'TRACTION' && (
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label>Customer Conversations</Label>
+                          <Label className="text-xs font-semibold text-zinc-700">Customer Conversations</Label>
                           <Input type="number" value={tracForm.customerConversations} onChange={e => setTracForm({...tracForm, customerConversations: e.target.value})} />
                         </div>
                         <div className="space-y-2">
-                          <Label>Active Pilots</Label>
+                          <Label className="text-xs font-semibold text-zinc-700">Active Pilots</Label>
                           <Input type="number" value={tracForm.pilots} onChange={e => setTracForm({...tracForm, pilots: e.target.value})} />
                         </div>
                         <div className="space-y-2">
-                          <Label>Paying Customers</Label>
+                          <Label className="text-xs font-semibold text-zinc-700">Paying Customers</Label>
                           <Input type="number" value={tracForm.payingCustomers} onChange={e => setTracForm({...tracForm, payingCustomers: e.target.value})} />
                         </div>
-                        <Button className="w-full bg-[#1E4133] text-white hover:bg-[#144B3B]" onClick={() => handleTractionSubmit(req)}>Submit Traction Data</Button>
+                        <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold" onClick={() => handleTractionSubmit(req)}>Submit Traction Data</Button>
                       </div>
                     )}
 
                     {req.type === 'MILESTONE_STATUS' && (
                       <div className="space-y-4">
-                        <p className="text-sm">Please update your milestones in the section below. Once updated, click submit to notify the team.</p>
-                        <Button className="w-full bg-[#1E4133] text-white hover:bg-[#144B3B]" onClick={() => {
+                        <p className="text-sm text-zinc-600">Please update your milestones in the section below. Once updated, click submit to notify the team.</p>
+                        <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold" onClick={() => {
                           updateDataRequest({ ...req, status: 'SUBMITTED' });
                           toast.success('Milestone updates submitted');
                         }}>Confirm Milestones Updated</Button>
@@ -221,21 +221,21 @@ export default function FounderPortal() {
           </Card>
 
           {/* Milestones */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Milestones Progress</CardTitle>
+          <Card className="border-zinc-200 shadow-2xs">
+            <CardHeader className="bg-zinc-50/50 border-b border-zinc-200">
+              <CardTitle className="text-zinc-900 text-lg">Milestones Progress</CardTitle>
               <CardDescription>Update progress on your active milestones.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <div className="space-y-4">
-                {sMilestones.length === 0 && <p className="text-sm text-black/60">No active milestones.</p>}
+                {sMilestones.length === 0 && <p className="text-sm text-zinc-500">No active milestones.</p>}
                 {sMilestones.map(m => (
-                  <div key={m.id} className="border rounded-md p-4 space-y-3">
+                  <div key={m.id} className="border border-zinc-200 rounded-lg p-4 space-y-3 bg-white">
                     <div className="flex justify-between items-start">
-                      <div className="font-medium">{m.title}</div>
-                      <Badge variant="secondary">{m.category}</Badge>
+                      <div className="font-semibold text-zinc-900 text-sm">{m.title}</div>
+                      <Badge variant="secondary" className="text-xs bg-zinc-100 text-zinc-700">{m.category}</Badge>
                     </div>
-                    <div className="text-xs text-black/60 flex gap-4">
+                    <div className="text-xs text-zinc-500 flex gap-4 font-mono">
                       <span>Target: {m.targetDate}</span>
                       {m.revisedDate && <span>Revised: {m.revisedDate}</span>}
                     </div>
@@ -249,7 +249,7 @@ export default function FounderPortal() {
                             toast.success('Milestone status updated');
                           }}
                         >
-                          <SelectTrigger className="h-8 text-xs">
+                          <SelectTrigger className="h-8 text-xs border-zinc-200">
                             <SelectValue placeholder="Status" />
                           </SelectTrigger>
                           <SelectContent>
@@ -264,20 +264,20 @@ export default function FounderPortal() {
                       <div className="flex-1 flex items-center gap-2">
                         <Input 
                           type="number" 
-                          className="h-8 text-xs w-20" 
+                          className="h-8 text-xs w-20 border-zinc-200 font-mono" 
                           placeholder="%" 
                           value={m.percentComplete} 
                           onChange={(e) => {
                             updateMilestone({ ...m, percentComplete: Number(e.target.value), lastUpdatedBy: 'FOUNDER', lastUpdatedOn: new Date().toISOString().split('T')[0] });
                           }}
                         />
-                        <span className="text-xs text-black/60">% Done</span>
+                        <span className="text-xs text-zinc-500 font-medium">% Done</span>
                       </div>
                     </div>
                     {['DELAYED', 'AT_RISK'].includes(m.status) && (
                       <Input 
                         placeholder="Reason for delay..." 
-                        className="h-8 text-xs" 
+                        className="h-8 text-xs border-zinc-200" 
                         value={m.delayReason || ''}
                         onChange={(e) => {
                           updateMilestone({ ...m, delayReason: e.target.value, lastUpdatedBy: 'FOUNDER', lastUpdatedOn: new Date().toISOString().split('T')[0] });
