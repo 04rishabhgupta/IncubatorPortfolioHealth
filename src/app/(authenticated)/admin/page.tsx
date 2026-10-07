@@ -3,7 +3,7 @@
 import { useStore } from '@/store';
 import { DEMO_TODAY } from '@/lib/clock';
 import { getLatestApprovedAssessment, getRunwayMonths, getNeedsAttentionRules } from '@/lib/derived';
-import { formatINR, formatINRExact } from '@/lib/utils';
+import { formatINRExact } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -57,7 +57,6 @@ export default function AdminOverview() {
   let totalSanctioned = 0;
   let runwayUnder3 = 0;
   const activeMatches = mentorMatches.filter((m) => m.status === 'ACTIVE').length;
-  let founderUpdatesOverdue = 0;
   let atRiskCritical = 0;
   let totalHealth = 0;
   let healthCount = 0;
@@ -80,16 +79,6 @@ export default function AdminOverview() {
       totalHealth += a.total;
       healthCount++;
       if (['AT_RISK', 'CRITICAL'].includes(a.band)) atRiskCritical++;
-    }
-
-    const allAccepted = submissions
-      .filter((sub) => sub.startupId === s.id && sub.status === 'ACCEPTED')
-      .sort((a, b) => new Date(b.submittedOn).getTime() - new Date(a.submittedOn).getTime());
-    if (allAccepted.length === 0) {
-      founderUpdatesOverdue++;
-    } else {
-      const diffDays = (new Date(DEMO_TODAY).getTime() - new Date(allAccepted[0].submittedOn).getTime()) / (1000 * 3600 * 24);
-      if (diffDays > 35) founderUpdatesOverdue++;
     }
 
     const hasApprovedPrev = assessments.some(
@@ -312,14 +301,14 @@ export default function AdminOverview() {
         />
         <StatCard
           title="Funding Disbursed"
-          value="₹24,80,00,000"
+          value={formatINRExact(totalDisbursed)}
           icon={IndianRupee}
           trend="~ +15.3%"
-          subtitle="of sanctioned"
+          subtitle={totalSanctioned > 0 ? `of ${formatINRExact(totalSanctioned)} sanctioned` : 'of sanctioned'}
         />
         <StatCard
           title="Mentors Active"
-          value="42"
+          value={activeMatches > 0 ? String(activeMatches) : '42'}
           icon={Users}
           trend="~ +5"
           subtitle="engagements"
