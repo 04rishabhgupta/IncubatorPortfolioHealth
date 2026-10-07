@@ -25,7 +25,7 @@ import { regulatory } from '../src/data/seed/regulatory';
 import { computeInvestibilityScore, generateAIAnalysis } from '../src/lib/aiAnalysis';
 
 // Fixed deterministic UUID namespace for Folio OS
-const NAMESPACE = 'f1770000-0000-0000-0000-000000000000';
+const NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
 
 export function uuidFor(entity: string, rawId: string): string {
   return uuidv5(`${entity}:${rawId}`, NAMESPACE);
@@ -366,7 +366,7 @@ async function main() {
     const matchUuid = uuidFor('mentor_match', mm.id);
     const { error: mmError } = await supabase.from('mentor_matches').upsert({
       id: matchUuid,
-      request_id: mm.requestId ? uuidFor('mentor_request', mm.requestId) : null,
+      request_id: mm.requestId && mentorRequests.some((r) => r.id === mm.requestId) ? uuidFor('mentor_request', mm.requestId) : null,
       startup_id: uuidFor('startup', mm.startupId),
       mentor_id: uuidFor('mentor', mm.mentorId),
       confirmed_by: uuidFor('user', mm.confirmedBy),

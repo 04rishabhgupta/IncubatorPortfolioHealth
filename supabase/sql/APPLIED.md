@@ -5,5 +5,5 @@ Every change to schema, RLS policies, triggers, or RPC functions must be committ
 
 | File | Date Applied | Applied By | Environment / Project | Notes |
 |---|---|---|---|---|
-| `001_schema.sql` | Pending | | Dev (`pgznqlqfywnqtohvpeti`) | Initial tables, constraints, enums, indexes |
-| `002_rls.sql` | Pending | | Dev (`pgznqlqfywnqtohvpeti`) | RLS policies, helper functions, and RPCs |
+| `001_schema.sql` | 2026-10-07 | Saransh | Dev (`pgznqlqfywnqtohvpeti`) | Initial tables, constraints, enums, indexes, triggers |
+| `002_rls.sql` | 2026-10-07 | Saransh | Dev (`pgznqlqfywnqtohvpeti`) | RLS policies, helper functions (`get_current_role`, `can_access_startup`), and RPCs (`update_assignment`, `approve_assessment`) |
