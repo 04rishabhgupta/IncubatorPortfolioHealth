@@ -1,6 +1,6 @@
 'use client';
 
-import { users } from '@/data/seed/users';
+import { useStore } from '@/store';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
@@ -15,6 +15,7 @@ import {
 import { Users, Shield, Briefcase, UserCheck } from 'lucide-react';
 
 export default function AdminUsersPage() {
+  const { users } = useStore();
   const adminCount = users.filter((u) => u.role === 'ADMIN').length;
   const imCount = users.filter((u) => u.role === 'INVESTMENT_MANAGER').length;
   const iaCount = users.filter((u) => u.role === 'INVESTMENT_ASSOCIATE').length;

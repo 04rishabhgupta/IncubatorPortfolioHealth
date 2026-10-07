@@ -17,7 +17,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
-import { users } from '@/data/seed/users';
 import {
   LineChart,
   Line,
@@ -48,7 +47,7 @@ import {
 
 export default function AdminOverview() {
   const router = useRouter();
-  const { startups, metrics, assessments, submissions, mentorMatches, milestones, dataRequests } = useStore();
+  const { startups, metrics, assessments, submissions, mentorMatches, milestones, dataRequests, users } = useStore();
 
   const managers = users.filter((u) => u.role === 'INVESTMENT_MANAGER');
 
