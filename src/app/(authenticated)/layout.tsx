@@ -6,13 +6,11 @@ import { users } from '@/data/seed/users';
 import { useEffect } from 'react';
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
-  const { currentUser, login } = useStore();
+  const { currentUser, hydrate } = useStore();
 
   useEffect(() => {
-    if (!currentUser && users.length > 0) {
-      login(users[0]);
-    }
-  }, [currentUser, login]);
+    hydrate();
+  }, [hydrate]);
 
   const activeUser = currentUser || users[0];
   if (!activeUser) return null;

@@ -29,6 +29,23 @@ import { submissions as seedSubmissions } from '@/data/seed/submissions';
 import { seedNotifications } from '@/data/seed/notifications';
 import { users } from '@/data/seed/users';
 import { computeInvestibilityScore, generateAIAnalysis } from '@/lib/aiAnalysis';
+import { createClient } from '@/lib/supabase/client';
+import {
+  startupFromRow,
+  metricFromRow,
+  milestoneFromRow,
+  assessmentFromRow,
+  mentorFromRow,
+  mentorMatchFromRow,
+  mentorRequestFromRow,
+  dataRequestFromRow,
+  founderSubmissionFromRow,
+  teamMemberFromRow,
+  founderActionItemFromRow,
+  activityLogFromRow,
+  notificationFromRow,
+  userFromProfile,
+} from '@/lib/supabase/mappers';
 
 // Initialize seed startups with investibility and AI analysis
 const enrichedSeedStartups: Startup[] = seedStartups.map((s) => {
@@ -44,6 +61,7 @@ const enrichedSeedStartups: Startup[] = seedStartups.map((s) => {
 
 interface StoreState {
   currentUser: User | null;
+  users: User[];
   startups: Startup[];
   metrics: MonthlyMetrics[];
   assessments: HealthAssessment[];
@@ -61,6 +79,7 @@ interface StoreState {
   // Actions
   login: (user: User) => void;
   logout: () => void;
+  hydrate: () => Promise<void>;
   resetDemoData: () => void;
   updateAssignment: (startupId: string, managerId: string, associateId: string | null, actor: string) => void;
   addFounderActionItems: (items: Omit<FounderActionItem, 'id'>[]) => void;
@@ -111,6 +130,7 @@ export const useStore = create<StoreState>()(
   persist(
     (set) => ({
       currentUser: users[0],
+      users: users,
       startups: enrichedSeedStartups,
       metrics: seedMetrics,
       assessments: seedAssessments,
@@ -126,7 +146,111 @@ export const useStore = create<StoreState>()(
       notifications: seedNotifications,
 
       login: (user) => set({ currentUser: user }),
-      logout: () => set({ currentUser: null }),
+      logout: () => {
+        try {
+          const supabase = createClient();
+          supabase.auth.signOut();
+        } catch {}
+        set({ currentUser: null });
+      },
+
+      hydrate: async () => {
+        try {
+          const supabase = createClient();
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (!authUser) return;
+
+          const [
+            profilesRes,
+            startupsRes,
+            trackersRes,
+            metricsRes,
+            milestonesRes,
+            assessmentsRes,
+            mentorsRes,
+            matchesRes,
+            sessionsRes,
+            mentorReqsRes,
+            dataReqsRes,
+            submissionsRes,
+            teamsRes,
+            actionItemsRes,
+            logsRes,
+            notifsRes,
+            recipientsRes,
+          ] = await Promise.all([
+            supabase.from('profiles').select('*'),
+            supabase.from('startups').select('*'),
+            supabase.from('startup_fitt_trackers').select('*'),
+            supabase.from('monthly_metrics').select('*'),
+            supabase.from('milestones').select('*'),
+            supabase.from('health_assessments').select('*'),
+            supabase.from('mentors').select('*'),
+            supabase.from('mentor_matches').select('*'),
+            supabase.from('mentor_sessions').select('*'),
+            supabase.from('mentor_requests').select('*'),
+            supabase.from('data_requests').select('*'),
+            supabase.from('founder_submissions').select('*'),
+            supabase.from('team_members').select('*'),
+            supabase.from('founder_action_items').select('*'),
+            supabase.from('activity_logs').select('*'),
+            supabase.from('notifications').select('*'),
+            supabase.from('notification_recipients').select('*'),
+          ]);
+
+          const loadedUsers = (profilesRes.data || []).map(userFromProfile);
+          const currentProfile = profilesRes.data?.find((p) => p.id === authUser.id);
+          const currentAppUser = currentProfile ? userFromProfile(currentProfile) : null;
+
+          const trackerMap = new Map((trackersRes.data || []).map((t) => [t.startup_id, t]));
+          const loadedStartups = (startupsRes.data || []).map((s) => startupFromRow(s, trackerMap.get(s.id)));
+
+          const loadedMetrics = (metricsRes.data || []).map(metricFromRow);
+          const loadedMilestones = (milestonesRes.data || []).map(milestoneFromRow);
+          const loadedAssessments = (assessmentsRes.data || []).map(assessmentFromRow);
+          const loadedMentors = (mentorsRes.data || []).map(mentorFromRow);
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const sessionMap = new Map<string, any[]>();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (sessionsRes.data || []).forEach((ses: any) => {
+            const arr = sessionMap.get(ses.match_id) || [];
+            arr.push(ses);
+            sessionMap.set(ses.match_id, arr);
+          });
+          const loadedMatches = (matchesRes.data || []).map((m) => mentorMatchFromRow(m, sessionMap.get(m.id) || []));
+          const loadedMentorReqs = (mentorReqsRes.data || []).map(mentorRequestFromRow);
+
+          const loadedDataReqs = (dataReqsRes.data || []).map(dataRequestFromRow);
+          const loadedSubmissions = (submissionsRes.data || []).map(founderSubmissionFromRow);
+          const loadedTeams = (teamsRes.data || []).map(teamMemberFromRow);
+          const loadedActionItems = (actionItemsRes.data || []).map(founderActionItemFromRow);
+          const loadedLogs = (logsRes.data || []).map(activityLogFromRow);
+
+          const readMap = new Map((recipientsRes.data || []).map((r) => [r.notification_id, Boolean(r.read_at)]));
+          const loadedNotifications = (notifsRes.data || []).map((n) => notificationFromRow(n, readMap.get(n.id) || false));
+
+          set((state) => ({
+            currentUser: currentAppUser || state.currentUser,
+            users: loadedUsers.length > 0 ? loadedUsers : state.users,
+            startups: loadedStartups.length > 0 ? loadedStartups : state.startups,
+            metrics: loadedMetrics.length > 0 ? loadedMetrics : state.metrics,
+            milestones: loadedMilestones.length > 0 ? loadedMilestones : state.milestones,
+            assessments: loadedAssessments.length > 0 ? loadedAssessments : state.assessments,
+            mentors: loadedMentors.length > 0 ? loadedMentors : state.mentors,
+            mentorMatches: loadedMatches.length > 0 ? loadedMatches : state.mentorMatches,
+            mentorRequests: loadedMentorReqs.length > 0 ? loadedMentorReqs : state.mentorRequests,
+            dataRequests: loadedDataReqs.length > 0 ? loadedDataReqs : state.dataRequests,
+            submissions: loadedSubmissions.length > 0 ? loadedSubmissions : state.submissions,
+            teams: loadedTeams.length > 0 ? loadedTeams : state.teams,
+            founderActionItems: loadedActionItems.length > 0 ? loadedActionItems : state.founderActionItems,
+            activityLogs: loadedLogs.length > 0 ? loadedLogs : state.activityLogs,
+            notifications: loadedNotifications.length > 0 ? loadedNotifications : state.notifications,
+          }));
+        } catch (err) {
+          console.error('Failed to hydrate from Supabase:', err);
+        }
+      },
 
       resetDemoData: () =>
         set({

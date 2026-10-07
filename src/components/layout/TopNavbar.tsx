@@ -29,7 +29,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StartupUploadModal } from '@/components/portfolio/StartupUploadModal';
-import { users } from '@/data/seed/users';
+import { users, demoPasswords } from '@/data/seed/users';
+import { createClient } from '@/lib/supabase/client';
+import { userFromProfile } from '@/lib/supabase/mappers';
 
 export function TopNavbar() {
   const router = useRouter();
@@ -38,6 +40,7 @@ export function TopNavbar() {
     currentUser,
     login,
     logout,
+    hydrate,
     notifications,
     markNotificationRead,
     markAllNotificationsRead,
@@ -452,9 +455,30 @@ export function TopNavbar() {
                       {users.slice(0, 3).map((u) => (
                         <button
                           key={u.id}
-                          onClick={() => {
-                            login(u);
+                          onClick={async () => {
                             setUserMenuOpen(false);
+                            try {
+                              const supabase = createClient();
+                              const pwd = demoPasswords[u.role];
+                              const { data: authData } = await supabase.auth.signInWithPassword({
+                                email: u.email,
+                                password: pwd,
+                              });
+                              if (authData?.user) {
+                                const { data: profile } = await supabase
+                                  .from('profiles')
+                                  .select('*')
+                                  .eq('id', authData.user.id)
+                                  .single();
+                                if (profile) login(userFromProfile(profile));
+                                else login(u);
+                                await hydrate();
+                              } else {
+                                login(u);
+                              }
+                            } catch {
+                              login(u);
+                            }
                             if (u.role === 'ADMIN') router.push('/admin');
                             else router.push('/portfolio');
                           }}
