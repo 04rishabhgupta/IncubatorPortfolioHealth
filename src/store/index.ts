@@ -6,6 +6,8 @@ import {
   hardDeleteStartupAction,
   updateAssignmentAction,
 } from '@/app/actions/startups';
+import { upsertMetricAction } from '@/app/actions/metrics';
+import { addAssessmentAction, updateAssessmentAction } from '@/app/actions/assessments';
 import {
   Startup,
   MonthlyMetrics,
@@ -103,10 +105,10 @@ interface StoreState {
 
   // Logging & Metrics
   addActivityLog: (log: Omit<ActivityLog, 'id'>) => void;
-  upsertMetric: (metric: MonthlyMetrics) => void;
+  upsertMetric: (metric: MonthlyMetrics) => Promise<{ data: MonthlyMetrics | null; error: string | null }>;
   updateMilestone: (milestone: Milestone) => void;
-  updateAssessment: (assessment: HealthAssessment) => void;
-  addAssessment: (assessment: HealthAssessment) => void;
+  updateAssessment: (assessment: HealthAssessment) => Promise<{ data: HealthAssessment | null; error: string | null }>;
+  addAssessment: (assessment: HealthAssessment) => Promise<{ data: HealthAssessment | null; error: string | null }>;
   addMentorRequest: (req: MentorRequest) => void;
   updateMentorRequest: (req: MentorRequest) => void;
   addMentorMatch: (match: MentorMatch) => void;
@@ -538,41 +540,168 @@ export const useStore = create<StoreState>()((set, get) => ({
       addActivityLog: (log) =>
         set((state) => ({ activityLogs: [{ ...log, id: generateId() }, ...state.activityLogs] })),
 
-      upsertMetric: (metric) =>
-        set((state) => {
-          const exists = state.metrics.find(
-            (m) => m.id === metric.id || (m.startupId === metric.startupId && m.month === metric.month)
-          );
-          const nextMetrics = exists
-            ? state.metrics.map((m) => (m.id === exists.id ? { ...metric, id: exists.id } : m))
-            : [...state.metrics, metric];
+      upsertMetric: async (metric) => {
+        const prevMetrics = get().metrics;
+        const prevStartups = get().startups;
 
-          // Recompute target startup AI analysis and investibility with new metrics
-          const targetStartup = state.startups.find((s) => s.id === metric.startupId);
-          let updatedStartups = state.startups;
-          if (targetStartup) {
-            const sm = nextMetrics.filter((m) => m.startupId === targetStartup.id);
-            const investibility = computeInvestibilityScore(targetStartup, sm);
-            const aiAnalysis = generateAIAnalysis(targetStartup, sm);
-            updatedStartups = state.startups.map((s) =>
-              s.id === targetStartup.id ? { ...s, investibility, aiAnalysis } : s
-            );
+        const exists = prevMetrics.find(
+          (m) => m.id === metric.id || (m.startupId === metric.startupId && m.month === metric.month)
+        );
+        const nextMetrics = exists
+          ? prevMetrics.map((m) => (m.id === exists.id ? { ...metric, id: exists.id } : m))
+          : [...prevMetrics, metric];
+
+        // Recompute target startup AI analysis and investibility with new metrics
+        const targetStartup = prevStartups.find((s) => s.id === metric.startupId);
+        let updatedStartups = prevStartups;
+        if (targetStartup) {
+          const sm = nextMetrics.filter((m) => m.startupId === targetStartup.id);
+          const investibility = computeInvestibilityScore(targetStartup, sm);
+          const aiAnalysis = generateAIAnalysis(targetStartup, sm);
+          updatedStartups = prevStartups.map((s) =>
+            s.id === targetStartup.id ? { ...s, investibility, aiAnalysis } : s
+          );
+        }
+
+        // Optimistic update
+        set({
+          metrics: nextMetrics,
+          startups: updatedStartups,
+        });
+
+        try {
+          const res = await upsertMetricAction({
+            id: metric.id,
+            startupId: metric.startupId,
+            month: metric.month,
+            cashBalance: metric.cashBalance,
+            monthlyBurn: metric.monthlyBurn,
+            monthlyRevenue: metric.monthlyRevenue,
+            customerConversations: metric.customerConversations,
+            pilots: metric.pilots,
+            lois: metric.lois,
+            payingCustomers: metric.payingCustomers,
+            teamFullTime: metric.teamFullTime,
+            teamPartTime: metric.teamPartTime,
+            keyLearnings: metric.keyLearnings,
+            source: metric.source,
+            recordedOn: metric.recordedOn,
+          });
+
+          if (res.error) {
+            set({ metrics: prevMetrics, startups: prevStartups });
+            return res;
           }
 
-          return {
-            metrics: nextMetrics,
-            startups: updatedStartups,
-          };
-        }),
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              metrics: state.metrics.map((m) =>
+                m.startupId === canonical.startupId && m.month === canonical.month ? canonical : m
+              ),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ metrics: prevMetrics, startups: prevStartups });
+          return { data: null, error: message || 'Failed to upsert metric' };
+        }
+      },
 
       updateMilestone: (milestone) =>
         set((state) => ({ milestones: state.milestones.map((m) => (m.id === milestone.id ? milestone : m)) })),
 
-      updateAssessment: (assessment) =>
-        set((state) => ({ assessments: state.assessments.map((a) => (a.id === assessment.id ? assessment : a)) })),
+      updateAssessment: async (assessment) => {
+        const prevAssessments = get().assessments;
 
-      addAssessment: (assessment) =>
-        set((state) => ({ assessments: [...state.assessments, assessment] })),
+        // Optimistic update
+        set((state) => ({
+          assessments: state.assessments.map((a) => (a.id === assessment.id ? assessment : a)),
+        }));
+
+        try {
+          const res = await updateAssessmentAction({
+            id: assessment.id,
+            startupId: assessment.startupId,
+            month: assessment.month,
+            profile: assessment.profile,
+            dimensions: assessment.dimensions as unknown as Record<string, unknown>,
+            total: assessment.total,
+            band: assessment.band,
+            delta3m: assessment.delta3m,
+            strengths: assessment.strengths,
+            concerns: assessment.concerns,
+            actions: assessment.actions as unknown as unknown[],
+            status: assessment.status,
+            preparedBy: assessment.preparedBy,
+            submittedOn: assessment.submittedOn,
+            approvedBy: assessment.approvedBy,
+            approvedOn: assessment.approvedOn,
+            returnComment: assessment.returnComment,
+          });
+
+          if (res.error) {
+            set({ assessments: prevAssessments });
+            return res;
+          }
+
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              assessments: state.assessments.map((a) => (a.id === assessment.id ? canonical : a)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ assessments: prevAssessments });
+          return { data: null, error: message || 'Failed to update assessment' };
+        }
+      },
+
+      addAssessment: async (assessment) => {
+        const prevAssessments = get().assessments;
+
+        // Optimistic update
+        set((state) => ({ assessments: [...state.assessments, assessment] }));
+
+        try {
+          const res = await addAssessmentAction({
+            id: assessment.id,
+            startupId: assessment.startupId,
+            month: assessment.month,
+            profile: assessment.profile,
+            dimensions: assessment.dimensions as unknown as Record<string, unknown>,
+            total: assessment.total,
+            band: assessment.band,
+            delta3m: assessment.delta3m,
+            strengths: assessment.strengths,
+            concerns: assessment.concerns,
+            actions: assessment.actions as unknown as unknown[],
+            status: assessment.status,
+            preparedBy: assessment.preparedBy,
+            submittedOn: assessment.submittedOn,
+          });
+
+          if (res.error) {
+            set({ assessments: prevAssessments });
+            return res;
+          }
+
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              assessments: state.assessments.map((a) => (a.id === assessment.id ? canonical : a)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ assessments: prevAssessments });
+          return { data: null, error: message || 'Failed to add assessment' };
+        }
+      },
 
       addMentorRequest: (req) =>
         set((state) => {
