@@ -5,7 +5,6 @@ import { useStore } from '@/store';
 import { Startup, Sector, Stage, IPStatus, CommercialSignal } from '@/types';
 import { parseStartupExcel } from '@/lib/excelService';
 import { computeInvestibilityScore, generateAIAnalysis, detectRedFlags } from '@/lib/aiAnalysis';
-import { users } from '@/data/seed/users';
 import {
   Upload,
   X,
@@ -46,7 +45,7 @@ const STAGES: Stage[] = [
 ];
 
 export function StartupEditModal({ startup, isOpen, onClose, onDeleted }: StartupEditModalProps) {
-  const { updateStartup, deleteStartup, currentUser } = useStore();
+  const { updateStartup, deleteStartup, currentUser, users } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState(startup.name);
@@ -137,7 +136,7 @@ export function StartupEditModal({ startup, isOpen, onClose, onDeleted }: Startu
     reader.readAsArrayBuffer(file);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     const updatedAI = generateAIAnalysis(draftStartup);
     const finalStartup: Startup = {
@@ -145,13 +144,21 @@ export function StartupEditModal({ startup, isOpen, onClose, onDeleted }: Startu
       investibility,
       aiAnalysis: updatedAI,
     };
-    updateStartup(finalStartup);
+    const res = await updateStartup(finalStartup);
+    if (res?.error) {
+      toast.error(`Failed to update startup: ${res.error}`);
+      return;
+    }
     toast.success(`Updated ${finalStartup.name} profile and recomputed AI diagnostics`);
     onClose();
   };
 
-  const handleDelete = () => {
-    deleteStartup(startup.id);
+  const handleDelete = async () => {
+    const res = await deleteStartup(startup.id);
+    if (res?.error) {
+      toast.error(`Failed to remove startup: ${res.error}`);
+      return;
+    }
     toast.success(`Startup ${startup.name} removed from portfolio`);
     onClose();
     if (onDeleted) onDeleted();

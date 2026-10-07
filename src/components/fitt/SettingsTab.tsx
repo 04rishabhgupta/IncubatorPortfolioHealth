@@ -106,7 +106,7 @@ export function SettingsTab({
     setError('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const name = form.name.trim();
     const oneLiner = form.oneLiner.trim();
@@ -116,7 +116,7 @@ export function SettingsTab({
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError(`Enter a valid email, like founder@${(startup.website || 'company.com').replace(/^https?:\/\//, '')}.`); return; }
 
     if (canModify) {
-      updateStartup({
+      const res = await updateStartup({
         ...startup,
         name,
         oneLiner,
@@ -127,11 +127,19 @@ export function SettingsTab({
         city: form.city.trim(),
         cohort: form.cohort.trim(),
       });
+      if (res?.error) {
+        setError(res.error);
+        return;
+      }
     }
     if (canAssignManager || canAssignAssociate) {
       const nextManagerId = canAssignManager ? managerId : startup.managerId;
       const nextAssociateId = canAssignAssociate ? (associateId || null) : startup.associateId;
-      updateAssignment(startup.id, nextManagerId, nextAssociateId, currentUser.label);
+      const res = await updateAssignment(startup.id, nextManagerId, nextAssociateId, currentUser.label);
+      if (res?.error) {
+        setError(res.error);
+        return;
+      }
     }
     setEditing(false);
     setSaved(true);
@@ -139,9 +147,9 @@ export function SettingsTab({
 
   const handleDeleteOpen = () => { setDeleteOpen(true); setDeleteText(''); setDeleteError(false); };
   const handleDeleteCancel = () => { setDeleteOpen(false); setDeleteError(false); };
-  const handleDeleteGo = () => {
+  const handleDeleteGo = async () => {
     if (deleteText.trim() !== startup.name) { setDeleteError(true); return; }
-    updateStartup({ ...startup, archived: true });
+    await updateStartup({ ...startup, archived: true });
   };
 
   if (startup.archived) {

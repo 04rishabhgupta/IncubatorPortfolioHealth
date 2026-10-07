@@ -51,7 +51,7 @@ export default function StartupPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { currentUser, startups, updateStartup, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, teams } = useStore();
+  const { isHydrated, currentUser, startups, updateStartup, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, teams } = useStore();
   
   const user = currentUser || users[0];
   const accessibleStartups = user ? scopeStartups(user, startups) : startups;
@@ -67,6 +67,14 @@ export default function StartupPage() {
   const [syncing, setSyncing] = useState(false);
 
   if (!startup) {
+    if (!isHydrated) {
+      return (
+        <div className="p-8 flex flex-col items-center justify-center min-h-[50vh] gap-3">
+          <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-zinc-500 font-medium">Loading startup...</p>
+        </div>
+      );
+    }
     return (
       <div className="p-8 flex flex-col items-center justify-center min-h-[50vh]">
         <h1 className="text-4xl font-bold text-black mb-4">404</h1>
@@ -146,7 +154,7 @@ export default function StartupPage() {
 
     setSyncing(true);
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
         const buffer = evt.target?.result as ArrayBuffer;
         const parsed = parseStartupExcel(buffer, startup);
@@ -157,7 +165,11 @@ export default function StartupPage() {
         };
         updated.investibility = computeInvestibilityScore(updated, metrics);
         updated.aiAnalysis = generateAIAnalysis(updated, metrics);
-        updateStartup(updated);
+        const res = await updateStartup(updated);
+        if (res?.error) {
+          toast.error(`Failed to update startup: ${res.error}`);
+          return;
+        }
         toast.success(`Excel synced for ${startup.name}! Data and AI Diagnostics updated.`);
       } catch (err) {
         console.error('Failed to parse Excel:', err);
@@ -190,8 +202,12 @@ export default function StartupPage() {
     }
   };
 
-  const handleSaveSettings = () => {
-    updateStartup({ ...startup, ...formData });
+  const handleSaveSettings = async () => {
+    const res = await updateStartup({ ...startup, ...formData });
+    if (res?.error) {
+      toast.error(`Failed to update startup: ${res.error}`);
+      return;
+    }
     toast.success('Startup details updated');
   };
 

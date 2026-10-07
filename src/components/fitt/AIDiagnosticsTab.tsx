@@ -27,7 +27,7 @@ export function AIDiagnosticsTab({ startup, metrics }: { startup: Startup; metri
 
     setSyncing(true);
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
         const buffer = evt.target?.result as ArrayBuffer;
         const parsed = parseStartupExcel(buffer, startup);
@@ -39,7 +39,11 @@ export function AIDiagnosticsTab({ startup, metrics }: { startup: Startup; metri
         // Automatically re-calculate AI investibility & red flags from new Excel data
         updatedStartup.investibility = computeInvestibilityScore(updatedStartup, metrics);
         updatedStartup.aiAnalysis = generateAIAnalysis(updatedStartup, metrics);
-        updateStartup(updatedStartup);
+        const res = await updateStartup(updatedStartup);
+        if (res?.error) {
+          toast.error(`Failed to update startup: ${res.error}`);
+          return;
+        }
         toast.success(`Excel data updated! AI Diagnostics and parameters recalculated.`);
       } catch (err) {
         console.error('Failed to parse Excel:', err);

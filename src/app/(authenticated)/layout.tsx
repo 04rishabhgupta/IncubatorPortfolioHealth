@@ -6,13 +6,24 @@ import { users } from '@/data/seed/users';
 import { useEffect } from 'react';
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
-  const { currentUser, hydrate } = useStore();
+  const { currentUser, hydrate, isHydrated } = useStore();
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
 
   const activeUser = currentUser || users[0];
+  if (!isHydrated && !currentUser) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center font-sans">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-zinc-500 font-medium">Loading Folio OS...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!activeUser) return null;
 
   return (

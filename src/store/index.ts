@@ -1,5 +1,11 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import {
+  createStartupAction,
+  updateStartupAction,
+  deleteStartupAction,
+  hardDeleteStartupAction,
+  updateAssignmentAction,
+} from '@/app/actions/startups';
 import {
   Startup,
   MonthlyMetrics,
@@ -60,6 +66,7 @@ const enrichedSeedStartups: Startup[] = seedStartups.map((s) => {
 });
 
 interface StoreState {
+  isHydrated: boolean;
   currentUser: User | null;
   users: User[];
   startups: Startup[];
@@ -81,13 +88,13 @@ interface StoreState {
   logout: () => void;
   hydrate: () => Promise<void>;
   resetDemoData: () => void;
-  updateAssignment: (startupId: string, managerId: string, associateId: string | null, actor: string) => void;
+  updateAssignment: (startupId: string, managerId: string, associateId: string | null, actor: string) => Promise<{ success: boolean; error: string | null }>;
   addFounderActionItems: (items: Omit<FounderActionItem, 'id'>[]) => void;
 
   // Startup CRUD
-  createStartup: (startup: Startup) => void;
-  updateStartup: (startup: Startup) => void;
-  deleteStartup: (startupId: string) => void;
+  createStartup: (startup: Startup) => Promise<{ data: Startup | null; error: string | null }>;
+  updateStartup: (startup: Startup) => Promise<{ data: Startup | null; error: string | null }>;
+  deleteStartup: (startupId: string, hard?: boolean) => Promise<{ success: boolean; error: string | null }>;
 
   // Notifications
   addNotification: (notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'> & Partial<AppNotification>) => void;
@@ -112,26 +119,11 @@ interface StoreState {
 
 const generateId = () => Math.random().toString(36).substring(2, 11);
 
-const removedStartupIds = new Set(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10']);
-
-function reconcileById<T extends { id: string; startupId?: string }>(seedArr: T[], persistedArr: T[] | undefined): T[] {
-  if (!persistedArr) return seedArr;
-  const filteredPersisted = persistedArr.filter((x) => {
-    if (removedStartupIds.has(x.id)) return false;
-    if (x.startupId && removedStartupIds.has(x.startupId)) return false;
-    return true;
-  });
-  const known = new Set(filteredPersisted.map((x) => x.id));
-  const missing = seedArr.filter((x) => !known.has(x.id));
-  return missing.length ? [...filteredPersisted, ...missing] : filteredPersisted;
-}
-
-export const useStore = create<StoreState>()(
-  persist(
-    (set) => ({
-      currentUser: users[0],
-      users: users,
-      startups: enrichedSeedStartups,
+export const useStore = create<StoreState>()((set, get) => ({
+  isHydrated: false,
+  currentUser: users[0],
+  users: users,
+  startups: enrichedSeedStartups,
       metrics: seedMetrics,
       assessments: seedAssessments,
       mentors: seedMentors,
@@ -231,21 +223,22 @@ export const useStore = create<StoreState>()(
           const loadedNotifications = (notifsRes.data || []).map((n) => notificationFromRow(n, readMap.get(n.id) || false));
 
           set((state) => ({
+            isHydrated: true,
             currentUser: currentAppUser || state.currentUser,
             users: loadedUsers.length > 0 ? loadedUsers : state.users,
-            startups: loadedStartups.length > 0 ? loadedStartups : state.startups,
-            metrics: loadedMetrics.length > 0 ? loadedMetrics : state.metrics,
-            milestones: loadedMilestones.length > 0 ? loadedMilestones : state.milestones,
-            assessments: loadedAssessments.length > 0 ? loadedAssessments : state.assessments,
-            mentors: loadedMentors.length > 0 ? loadedMentors : state.mentors,
-            mentorMatches: loadedMatches.length > 0 ? loadedMatches : state.mentorMatches,
-            mentorRequests: loadedMentorReqs.length > 0 ? loadedMentorReqs : state.mentorRequests,
-            dataRequests: loadedDataReqs.length > 0 ? loadedDataReqs : state.dataRequests,
-            submissions: loadedSubmissions.length > 0 ? loadedSubmissions : state.submissions,
-            teams: loadedTeams.length > 0 ? loadedTeams : state.teams,
-            founderActionItems: loadedActionItems.length > 0 ? loadedActionItems : state.founderActionItems,
-            activityLogs: loadedLogs.length > 0 ? loadedLogs : state.activityLogs,
-            notifications: loadedNotifications.length > 0 ? loadedNotifications : state.notifications,
+            startups: loadedStartups,
+            metrics: loadedMetrics,
+            milestones: loadedMilestones,
+            assessments: loadedAssessments,
+            mentors: loadedMentors,
+            mentorMatches: loadedMatches,
+            mentorRequests: loadedMentorReqs,
+            dataRequests: loadedDataReqs,
+            submissions: loadedSubmissions,
+            teams: loadedTeams,
+            founderActionItems: loadedActionItems,
+            activityLogs: loadedLogs,
+            notifications: loadedNotifications,
           }));
         } catch (err) {
           console.error('Failed to hydrate from Supabase:', err);
@@ -269,29 +262,53 @@ export const useStore = create<StoreState>()(
           notifications: seedNotifications,
         }),
 
-      updateAssignment: (startupId, managerId, associateId, actor) =>
-        set((state) => {
-          const startup = state.startups.find((s) => s.id === startupId);
-          if (!startup) return {};
-          let resolvedAssociateId = associateId && associateId !== '' ? associateId : null;
-          if (resolvedAssociateId) {
-            const assoc = users.find((u) => u.id === resolvedAssociateId);
-            if (!assoc || assoc.managerId !== managerId) resolvedAssociateId = null;
+      updateAssignment: async (startupId, managerId, associateId, actor) => {
+        const prevStartups = get().startups;
+        const startup = prevStartups.find((s) => s.id === startupId);
+        if (!startup) return { success: false, error: 'Startup not found' };
+
+        let resolvedAssociateId = associateId && associateId !== '' ? associateId : null;
+        if (resolvedAssociateId) {
+          const assoc = get().users.find((u) => u.id === resolvedAssociateId);
+          if (!assoc || assoc.managerId !== managerId) resolvedAssociateId = null;
+        }
+
+        const changes: string[] = [];
+        if (managerId !== startup.managerId) changes.push(`manager reassigned to ${managerId}`);
+        if (resolvedAssociateId !== startup.associateId)
+          changes.push(`associate set to ${resolvedAssociateId ?? 'unassigned'}`);
+        if (changes.length === 0) return { success: true, error: null };
+
+        const updated: Startup = { ...startup, managerId, associateId: resolvedAssociateId };
+
+        // Optimistic update
+        set((state) => ({
+          startups: state.startups.map((s) => (s.id === startupId ? updated : s)),
+          activityLogs: [
+            { id: generateId(), startupId, at: new Date().toISOString(), actor, text: changes.join('; ') },
+            ...state.activityLogs,
+          ],
+        }));
+
+        try {
+          const res = await updateAssignmentAction({
+            startupId,
+            managerId,
+            associateId: resolvedAssociateId,
+            actor,
+          });
+
+          if (res.error) {
+            set({ startups: prevStartups });
+            return res;
           }
-          const changes: string[] = [];
-          if (managerId !== startup.managerId) changes.push(`manager reassigned to ${managerId}`);
-          if (resolvedAssociateId !== startup.associateId)
-            changes.push(`associate set to ${resolvedAssociateId ?? 'unassigned'}`);
-          if (changes.length === 0) return {};
-          const updated: Startup = { ...startup, managerId, associateId: resolvedAssociateId };
-          return {
-            startups: state.startups.map((s) => (s.id === startupId ? updated : s)),
-            activityLogs: [
-              { id: generateId(), startupId, at: new Date().toISOString(), actor, text: changes.join('; ') },
-              ...state.activityLogs,
-            ],
-          };
-        }),
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ startups: prevStartups });
+          return { success: false, error: message || 'Failed to update assignment' };
+        }
+      },
 
       addFounderActionItems: (items) =>
         set((state) => ({
@@ -299,95 +316,200 @@ export const useStore = create<StoreState>()(
         })),
 
       // Startup CRUD
-      createStartup: (startup) =>
-        set((state) => {
-          const investibility = startup.investibility || computeInvestibilityScore(startup);
-          const aiAnalysis = startup.aiAnalysis || generateAIAnalysis(startup);
-          const enriched: Startup = {
-            ...startup,
-            investibility,
-            aiAnalysis,
-          };
-          const newNotif: AppNotification = {
-            id: generateId(),
-            title: 'New Startup Created',
-            message: `${enriched.name} (${enriched.sector}) has been added to the incubator portfolio.`,
-            type: 'STARTUP_UPDATE',
-            startupId: enriched.id,
-            startupName: enriched.name,
-            createdAt: new Date().toISOString(),
-            read: false,
-            actionUrl: `/startups/${enriched.id}`,
-          };
-          return {
-            startups: [enriched, ...state.startups],
-            notifications: [newNotif, ...state.notifications],
-            activityLogs: [
-              {
-                id: generateId(),
-                startupId: enriched.id,
-                at: new Date().toISOString(),
-                actor: state.currentUser?.label || 'Staff',
-                text: `Startup ${enriched.name} created and AI analysis generated`,
-              },
-              ...state.activityLogs,
-            ],
-          };
-        }),
+      createStartup: async (startup) => {
+        const prevStartups = get().startups;
+        const investibility = startup.investibility || computeInvestibilityScore(startup);
+        const aiAnalysis = startup.aiAnalysis || generateAIAnalysis(startup);
+        const enriched: Startup = {
+          ...startup,
+          investibility,
+          aiAnalysis,
+        };
 
-      updateStartup: (startup) =>
-        set((state) => {
-          const startupMetrics = state.metrics.filter((m) => m.startupId === startup.id);
-          const investibility = computeInvestibilityScore(startup, startupMetrics);
-          const aiAnalysis = generateAIAnalysis(startup, startupMetrics);
-          const enriched: Startup = {
-            ...startup,
-            investibility,
-            aiAnalysis,
-          };
-          return {
-            startups: state.startups.map((s) => (s.id === startup.id ? enriched : s)),
-            activityLogs: [
-              {
-                id: generateId(),
-                startupId: startup.id,
-                at: new Date().toISOString(),
-                actor: state.currentUser?.label || 'Staff',
-                text: `Updated profile & recomputed AI diagnostics for ${startup.name}`,
-              },
-              ...state.activityLogs,
-            ],
-          };
-        }),
+        const newNotif: AppNotification = {
+          id: generateId(),
+          title: 'New Startup Created',
+          message: `${enriched.name} (${enriched.sector}) has been added to the incubator portfolio.`,
+          type: 'STARTUP_UPDATE',
+          startupId: enriched.id,
+          startupName: enriched.name,
+          createdAt: new Date().toISOString(),
+          read: false,
+          actionUrl: `/startups/${enriched.id}`,
+        };
 
-      deleteStartup: (startupId) =>
-        set((state) => {
-          const existing = state.startups.find((s) => s.id === startupId);
-          return {
-            startups: state.startups.filter((s) => s.id !== startupId),
-            notifications: [
-              {
-                id: generateId(),
-                title: 'Startup Removed',
-                message: `${existing?.name || startupId} was removed from the portfolio.`,
-                type: 'STARTUP_UPDATE',
-                createdAt: new Date().toISOString(),
-                read: false,
-              },
-              ...state.notifications,
-            ],
-            activityLogs: [
-              {
-                id: generateId(),
-                startupId,
-                at: new Date().toISOString(),
-                actor: state.currentUser?.label || 'Staff',
-                text: `Deleted startup ${existing?.name || startupId}`,
-              },
-              ...state.activityLogs,
-            ],
-          };
-        }),
+        // Optimistic update
+        set((state) => ({
+          startups: [enriched, ...state.startups],
+          notifications: [newNotif, ...state.notifications],
+          activityLogs: [
+            {
+              id: generateId(),
+              startupId: enriched.id,
+              at: new Date().toISOString(),
+              actor: state.currentUser?.label || 'Staff',
+              text: `Startup ${enriched.name} created and AI analysis generated`,
+            },
+            ...state.activityLogs,
+          ],
+        }));
+
+        try {
+          const res = await createStartupAction({
+            name: startup.name,
+            oneLiner: startup.oneLiner,
+            sector: startup.sector,
+            stage: startup.stage,
+            cohort: startup.cohort,
+            foundedOn: startup.foundedOn,
+            website: startup.website,
+            city: startup.city,
+            managerId: startup.managerId,
+            associateId: startup.associateId,
+            trl: startup.trl,
+            trlUpdatedOn: startup.trlUpdatedOn,
+            ipStatus: startup.ipStatus,
+            ipOwnershipClear: startup.ipOwnershipClear,
+            commercialSignal: startup.commercialSignal,
+            grantSanctioned: startup.grantSanctioned,
+            grantDisbursed: startup.grantDisbursed,
+            regTags: startup.regTags,
+            fittTracker: startup.fittTracker,
+          });
+
+          if (res.error) {
+            set({ startups: prevStartups });
+            return res;
+          }
+
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              startups: state.startups.map((s) => (s.id === enriched.id ? canonical : s)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ startups: prevStartups });
+          return { data: null, error: message || 'Failed to create startup' };
+        }
+      },
+
+      updateStartup: async (startup) => {
+        const prevStartups = get().startups;
+        const startupMetrics = get().metrics.filter((m) => m.startupId === startup.id);
+        const investibility = computeInvestibilityScore(startup, startupMetrics);
+        const aiAnalysis = generateAIAnalysis(startup, startupMetrics);
+        const enriched: Startup = {
+          ...startup,
+          investibility,
+          aiAnalysis,
+        };
+
+        // Optimistic update
+        set((state) => ({
+          startups: state.startups.map((s) => (s.id === startup.id ? enriched : s)),
+          activityLogs: [
+            {
+              id: generateId(),
+              startupId: startup.id,
+              at: new Date().toISOString(),
+              actor: state.currentUser?.label || 'Staff',
+              text: `Updated profile & recomputed AI diagnostics for ${startup.name}`,
+            },
+            ...state.activityLogs,
+          ],
+        }));
+
+        try {
+          const res = await updateStartupAction({
+            id: startup.id,
+            name: startup.name,
+            oneLiner: startup.oneLiner,
+            sector: startup.sector,
+            stage: startup.stage,
+            cohort: startup.cohort,
+            foundedOn: startup.foundedOn,
+            website: startup.website,
+            city: startup.city,
+            trl: startup.trl,
+            trlUpdatedOn: startup.trlUpdatedOn,
+            ipStatus: startup.ipStatus,
+            ipOwnershipClear: startup.ipOwnershipClear,
+            commercialSignal: startup.commercialSignal,
+            grantSanctioned: startup.grantSanctioned,
+            grantDisbursed: startup.grantDisbursed,
+            archived: startup.archived,
+            regTags: startup.regTags,
+            fittTracker: startup.fittTracker,
+          });
+
+          if (res.error) {
+            set({ startups: prevStartups });
+            return res;
+          }
+
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              startups: state.startups.map((s) => (s.id === startup.id ? canonical : s)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ startups: prevStartups });
+          return { data: null, error: message || 'Failed to update startup' };
+        }
+      },
+
+      deleteStartup: async (startupId, hard = false) => {
+        const prevStartups = get().startups;
+        const existing = prevStartups.find((s) => s.id === startupId);
+
+        // Optimistic update
+        set((state) => ({
+          startups: state.startups.filter((s) => s.id !== startupId),
+          notifications: [
+            {
+              id: generateId(),
+              title: 'Startup Removed',
+              message: `${existing?.name || startupId} was removed from the portfolio.`,
+              type: 'STARTUP_UPDATE',
+              createdAt: new Date().toISOString(),
+              read: false,
+            },
+            ...state.notifications,
+          ],
+          activityLogs: [
+            {
+              id: generateId(),
+              startupId,
+              at: new Date().toISOString(),
+              actor: state.currentUser?.label || 'Staff',
+              text: `Deleted startup ${existing?.name || startupId}`,
+            },
+            ...state.activityLogs,
+          ],
+        }));
+
+        try {
+          const res = hard
+            ? await hardDeleteStartupAction(startupId)
+            : await deleteStartupAction(startupId);
+
+          if (res.error) {
+            set({ startups: prevStartups });
+            return res;
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ startups: prevStartups });
+          return { success: false, error: message || 'Failed to delete startup' };
+        }
+      },
 
       // Notifications
       addNotification: (notif) =>
@@ -547,27 +669,5 @@ export const useStore = create<StoreState>()(
 
       updateSubmission: (sub) =>
         set((state) => ({ submissions: state.submissions.map((s) => (s.id === sub.id ? sub : s)) })),
-    }),
-    {
-      name: 'fitt-portfolio-os-v5',
-      merge: (persistedState, currentState) => {
-        const persisted = (persistedState ?? {}) as Partial<StoreState>;
-        return {
-          ...currentState,
-          ...persisted,
-          startups: reconcileById(enrichedSeedStartups, persisted.startups),
-          metrics: reconcileById(seedMetrics, persisted.metrics),
-          assessments: reconcileById(seedAssessments, persisted.assessments),
-          mentors: reconcileById(seedMentors, persisted.mentors),
-          mentorMatches: reconcileById(seedMatches, persisted.mentorMatches),
-          mentorRequests: reconcileById(seedRequests, persisted.mentorRequests),
-          milestones: reconcileById(seedMilestones, persisted.milestones),
-          teams: reconcileById(seedTeams, persisted.teams),
-          dataRequests: reconcileById(seedDataRequests, persisted.dataRequests),
-          submissions: reconcileById(seedSubmissions, persisted.submissions),
-          notifications: reconcileById(seedNotifications, persisted.notifications),
-        };
-      },
-    }
-  )
+    })
 );
