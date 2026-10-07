@@ -7,7 +7,7 @@
 -- 1. HELPER FUNCTIONS (Security Definer & Stable)
 -- ------------------------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION current_role()
+CREATE OR REPLACE FUNCTION get_current_role()
 RETURNS text
 LANGUAGE sql
 STABLE
@@ -28,9 +28,9 @@ AS $$
     SELECT 1 FROM startups s
     WHERE s.id = p_startup_id
     AND (
-      (SELECT current_role()) = 'ADMIN'
-      OR ((SELECT current_role()) = 'INVESTMENT_MANAGER' AND s.manager_id = auth.uid())
-      OR ((SELECT current_role()) = 'INVESTMENT_ASSOCIATE' AND s.associate_id = auth.uid())
+      (SELECT get_current_role()) = 'ADMIN'
+      OR ((SELECT get_current_role()) = 'INVESTMENT_MANAGER' AND s.manager_id = auth.uid())
+      OR ((SELECT get_current_role()) = 'INVESTMENT_ASSOCIATE' AND s.associate_id = auth.uid())
     )
   );
 $$;
@@ -55,7 +55,7 @@ DECLARE
   v_curr_manager_id uuid;
   v_assoc_manager_id uuid;
 BEGIN
-  v_role := current_role();
+  v_role := get_current_role();
   SELECT manager_id INTO v_curr_manager_id FROM startups WHERE id = p_startup_id;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Startup not found';
@@ -105,7 +105,7 @@ DECLARE
   v_manager_id uuid;
   v_role text;
 BEGIN
-  v_role := current_role();
+  v_role := get_current_role();
   SELECT startup_id INTO v_startup_id FROM health_assessments WHERE id = p_assessment_id;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Assessment not found';
@@ -168,7 +168,7 @@ CREATE POLICY profiles_update_own_policy ON profiles
     auth.uid() = id
     -- Regular users cannot escalate their own role or switch managers
     AND (
-      current_role() = 'ADMIN'
+      get_current_role() = 'ADMIN'
       OR (
         role = (SELECT p.role FROM profiles p WHERE p.id = auth.uid())
         AND manager_id IS NOT DISTINCT FROM (SELECT p.manager_id FROM profiles p WHERE p.id = auth.uid())
@@ -179,11 +179,11 @@ CREATE POLICY profiles_update_own_policy ON profiles
 -- Admins can insert/update any profile
 CREATE POLICY profiles_admin_insert ON profiles
   FOR INSERT TO authenticated
-  WITH CHECK (current_role() = 'ADMIN');
+  WITH CHECK (get_current_role() = 'ADMIN');
 
 CREATE POLICY profiles_admin_update ON profiles
   FOR UPDATE TO authenticated
-  USING (current_role() = 'ADMIN');
+  USING (get_current_role() = 'ADMIN');
 
 -- ------------------------------------------------------------------------------
 -- 5. POLICIES: STARTUPS
@@ -196,8 +196,8 @@ CREATE POLICY startups_select_policy ON startups
 CREATE POLICY startups_insert_policy ON startups
   FOR INSERT TO authenticated
   WITH CHECK (
-    current_role() = 'ADMIN'
-    OR (current_role() = 'INVESTMENT_MANAGER' AND manager_id = auth.uid())
+    get_current_role() = 'ADMIN'
+    OR (get_current_role() = 'INVESTMENT_MANAGER' AND manager_id = auth.uid())
   );
 
 CREATE POLICY startups_update_policy ON startups
@@ -208,8 +208,8 @@ CREATE POLICY startups_update_policy ON startups
 CREATE POLICY startups_delete_policy ON startups
   FOR DELETE TO authenticated
   USING (
-    current_role() = 'ADMIN'
-    OR (current_role() = 'INVESTMENT_MANAGER' AND manager_id = auth.uid())
+    get_current_role() = 'ADMIN'
+    OR (get_current_role() = 'INVESTMENT_MANAGER' AND manager_id = auth.uid())
   );
 
 -- Revoke direct column updates to manager_id and associate_id; force use of update_assignment()
@@ -331,8 +331,8 @@ CREATE POLICY mentors_select_policy ON mentors
 
 CREATE POLICY mentors_modify_policy ON mentors
   FOR ALL TO authenticated
-  USING (current_role() IN ('ADMIN', 'INVESTMENT_MANAGER'))
-  WITH CHECK (current_role() IN ('ADMIN', 'INVESTMENT_MANAGER'));
+  USING (get_current_role() IN ('ADMIN', 'INVESTMENT_MANAGER'))
+  WITH CHECK (get_current_role() IN ('ADMIN', 'INVESTMENT_MANAGER'));
 
 -- ------------------------------------------------------------------------------
 -- 8. POLICIES: ACTIVITY LOGS (Insert & Select Only)
@@ -358,8 +358,8 @@ CREATE POLICY notifications_select ON notifications
   USING (
     target_user_id IS NULL
     OR target_user_id = auth.uid()
-    OR target_role = current_role()
-    OR current_role() = 'ADMIN'
+    OR target_role = get_current_role()
+    OR get_current_role() = 'ADMIN'
   );
 
 CREATE POLICY notifications_insert ON notifications
@@ -389,5 +389,5 @@ CREATE POLICY regulatory_items_select ON regulatory_items
 
 CREATE POLICY regulatory_items_admin_modify ON regulatory_items
   FOR ALL TO authenticated
-  USING (current_role() = 'ADMIN')
-  WITH CHECK (current_role() = 'ADMIN');
+  USING (get_current_role() = 'ADMIN')
+  WITH CHECK (get_current_role() = 'ADMIN');

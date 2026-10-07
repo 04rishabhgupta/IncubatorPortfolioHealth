@@ -840,7 +840,7 @@ export interface Database {
       };
     };
     Functions: {
-      current_role: {
+      get_current_role: {
         Args: Record<PropertyKey, never>;
         Returns: string;
       };
