@@ -1,9 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/store';
 import { Sector, Stage, Startup, User } from '@/types';
 import { getAssignableAssociates, getAssignableManagers } from '@/lib/rbac';
+import {
+  getFounderLinkStatusAction,
+  rotateFounderLinkAction,
+  revokeFounderLinkAction,
+  FounderLinkStatus,
+} from '@/app/actions/founder';
+import { toast } from 'sonner';
 import styles from './fitt.module.css';
 import { cx, SECTOR_LABELS, STAGE_LABELS } from './helpers';
 
@@ -71,6 +78,99 @@ export function SettingsTab({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteText, setDeleteText] = useState('');
   const [deleteError, setDeleteError] = useState(false);
+
+  // Founder Portal Magic Link Management
+  const [linkStatus, setLinkStatus] = useState<FounderLinkStatus | null>(null);
+  const [loadingLink, setLoadingLink] = useState(false);
+  const [rotating, setRotating] = useState(false);
+  const [revoking, setRevoking] = useState(false);
+  const [generatedToken, setGeneratedToken] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [revokeConfirm, setRevokeConfirm] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadStatus() {
+      setLoadingLink(true);
+      try {
+        const res = await getFounderLinkStatusAction(startup.id);
+        if (mounted && res.data) {
+          setLinkStatus(res.data);
+        }
+      } catch {
+        // ignore
+      } finally {
+        if (mounted) setLoadingLink(false);
+      }
+    }
+    loadStatus();
+    return () => {
+      mounted = false;
+    };
+  }, [startup.id]);
+
+  const handleRotateLink = async () => {
+    setRotating(true);
+    setRevokeConfirm(false);
+    try {
+      const res = await rotateFounderLinkAction({ startupId: startup.id, expiresInDays: 90 });
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+      if (res.data) {
+        setGeneratedToken(res.data.token);
+        setLinkStatus({
+          hasActiveLink: true,
+          expiresAt: res.data.expiresAt,
+          createdAt: new Date().toISOString(),
+          isExpired: false,
+          isRevoked: false,
+        });
+        toast.success('Generated new magic link (valid for 90 days)');
+      }
+    } catch {
+      toast.error('Failed to rotate founder magic link');
+    } finally {
+      setRotating(false);
+    }
+  };
+
+  const handleRevokeLink = async () => {
+    setRevoking(true);
+    try {
+      const res = await revokeFounderLinkAction({ startupId: startup.id });
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+      setLinkStatus((prev) =>
+        prev
+          ? {
+              ...prev,
+              hasActiveLink: false,
+              isRevoked: true,
+            }
+          : null
+      );
+      setGeneratedToken(null);
+      setRevokeConfirm(false);
+      toast.success('Revoked founder portal magic link');
+    } catch {
+      toast.error('Failed to revoke magic link');
+    } finally {
+      setRevoking(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (!generatedToken) return;
+    const url = `${window.location.origin}/founder/${generatedToken}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    toast.success('Magic link copied to clipboard');
+    setTimeout(() => setCopied(false), 2500);
+  };
 
   const managers = getAssignableManagers(allUsers);
   const associates = getAssignableAssociates(managerId, allUsers);
@@ -232,6 +332,162 @@ export function SettingsTab({
           )}
         </form>
         {saved && !editing && <div className={styles.ok} style={{ display: 'block' }}>Changes saved.</div>}
+      </div>
+
+      {/* Founder Portal Magic Link Management */}
+      <div className={styles.card}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 16 }}>Founder Portal Access</div>
+            <div className={styles.note}>
+              Manage the secure time-bound magic link for {startup.name}&rsquo;s founder portal.
+            </div>
+          </div>
+          {linkStatus && (
+            <span
+              style={{
+                display: 'inline-block',
+                fontSize: 12,
+                fontWeight: 600,
+                padding: '3px 10px',
+                borderRadius: 999,
+                background: linkStatus.hasActiveLink ? '#DCFCE7' : linkStatus.isRevoked ? '#FEE2E2' : '#FEF3C7',
+                color: linkStatus.hasActiveLink ? '#15803D' : linkStatus.isRevoked ? '#B91C1C' : '#B45309',
+                border: `1px solid ${linkStatus.hasActiveLink ? '#86EFAC' : linkStatus.isRevoked ? '#FCA5A5' : '#FDE68A'}`,
+              }}
+            >
+              {linkStatus.hasActiveLink
+                ? 'Active Link'
+                : linkStatus.isRevoked
+                ? 'Revoked'
+                : linkStatus.isExpired
+                ? 'Expired'
+                : 'No Active Link'}
+            </span>
+          )}
+        </div>
+
+        <div style={{ marginTop: 14, fontSize: 13 }}>
+          {loadingLink ? (
+            <div style={{ color: 'var(--text-3)' }}>Checking magic link status...</div>
+          ) : (
+            <>
+              {linkStatus?.hasActiveLink && linkStatus.expiresAt && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, color: 'var(--text-2)' }}>
+                  <span style={{ color: 'var(--text-3)' }}>Expires on:</span>
+                  <span style={{ fontWeight: 600, fontFamily: 'monospace' }}>
+                    {new Date(linkStatus.expiresAt).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                </div>
+              )}
+
+              {generatedToken && (
+                <div
+                  style={{
+                    background: '#F0FDF4',
+                    border: '1px solid #BBF7D0',
+                    borderRadius: 8,
+                    padding: '12px 14px',
+                    marginBottom: 14,
+                  }}
+                >
+                  <div style={{ color: '#166534', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
+                    New magic link generated:
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input
+                      readOnly
+                      value={
+                        typeof window !== 'undefined'
+                          ? `${window.location.origin}/founder/${generatedToken}`
+                          : `/founder/${generatedToken}`
+                      }
+                      style={{
+                        flex: 1,
+                        minWidth: 240,
+                        padding: '6px 10px',
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                        borderRadius: 6,
+                        border: '1px solid #86EFAC',
+                        background: '#FFFFFF',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className={cx(styles.btn, styles.btnPrimary)}
+                      style={{ fontSize: 12, padding: '6px 12px' }}
+                      onClick={handleCopyLink}
+                    >
+                      {copied ? 'Copied!' : 'Copy link'}
+                    </button>
+                    <a
+                      href={`/founder/${generatedToken}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.btn}
+                      style={{ fontSize: 12, padding: '6px 12px', textDecoration: 'none' }}
+                    >
+                      Open portal
+                    </a>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#15803D', marginTop: 6 }}>
+                    Copy this link and share it with the founder. Because tokens are hashed in the database, this plaintext URL is only shown once.
+                  </div>
+                </div>
+              )}
+
+              {canModify && (
+                <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className={cx(styles.btn, !linkStatus?.hasActiveLink ? styles.btnPrimary : '')}
+                    disabled={rotating}
+                    onClick={handleRotateLink}
+                  >
+                    {rotating ? 'Generating...' : linkStatus?.hasActiveLink ? 'Rotate link (90 days)' : 'Generate magic link'}
+                  </button>
+
+                  {linkStatus?.hasActiveLink && !revokeConfirm && (
+                    <button
+                      type="button"
+                      className={cx(styles.btn, styles.dangerbtn)}
+                      disabled={revoking}
+                      onClick={() => setRevokeConfirm(true)}
+                    >
+                      Revoke link
+                    </button>
+                  )}
+
+                  {revokeConfirm && (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <span style={{ fontSize: 12, color: 'var(--weak)' }}>Revoke immediate access?</span>
+                      <button
+                        type="button"
+                        className={cx(styles.btn, styles.dangerfill)}
+                        disabled={revoking}
+                        onClick={handleRevokeLink}
+                      >
+                        {revoking ? 'Revoking...' : 'Confirm Revoke'}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.btn}
+                        onClick={() => setRevokeConfirm(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {canArchive && (

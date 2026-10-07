@@ -5,7 +5,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  }
+      '@': path.resolve(__dirname, './src'),
+      'server-only': path.resolve(__dirname, './src/test/server-only-mock.ts'),
+    },
+  },
 });
