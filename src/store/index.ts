@@ -9,6 +9,23 @@ import {
 import { upsertMetricAction } from '@/app/actions/metrics';
 import { addAssessmentAction, updateAssessmentAction } from '@/app/actions/assessments';
 import {
+  addMentorRequestAction,
+  updateMentorRequestAction,
+  addMentorMatchAction,
+  updateMentorMatchAction,
+} from '@/app/actions/mentors';
+import {
+  addDataRequestAction,
+  updateDataRequestAction,
+  addSubmissionAction,
+  updateSubmissionAction,
+  addFounderActionItemsAction,
+} from '@/app/actions/requests';
+import {
+  markNotificationReadAction,
+  markAllNotificationsReadAction,
+} from '@/app/actions/notifications';
+import {
   Startup,
   MonthlyMetrics,
   HealthAssessment,
@@ -91,7 +108,7 @@ interface StoreState {
   hydrate: () => Promise<void>;
   resetDemoData: () => void;
   updateAssignment: (startupId: string, managerId: string, associateId: string | null, actor: string) => Promise<{ success: boolean; error: string | null }>;
-  addFounderActionItems: (items: Omit<FounderActionItem, 'id'>[]) => void;
+  addFounderActionItems: (items: Omit<FounderActionItem, 'id'>[]) => Promise<{ data: FounderActionItem[] | null; error: string | null }>;
 
   // Startup CRUD
   createStartup: (startup: Startup) => Promise<{ data: Startup | null; error: string | null }>;
@@ -100,8 +117,8 @@ interface StoreState {
 
   // Notifications
   addNotification: (notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'> & Partial<AppNotification>) => void;
-  markNotificationRead: (id: string) => void;
-  markAllNotificationsRead: () => void;
+  markNotificationRead: (id: string) => Promise<{ success: boolean; error: string | null }>;
+  markAllNotificationsRead: () => Promise<{ success: boolean; error: string | null }>;
 
   // Logging & Metrics
   addActivityLog: (log: Omit<ActivityLog, 'id'>) => void;
@@ -109,14 +126,14 @@ interface StoreState {
   updateMilestone: (milestone: Milestone) => void;
   updateAssessment: (assessment: HealthAssessment) => Promise<{ data: HealthAssessment | null; error: string | null }>;
   addAssessment: (assessment: HealthAssessment) => Promise<{ data: HealthAssessment | null; error: string | null }>;
-  addMentorRequest: (req: MentorRequest) => void;
-  updateMentorRequest: (req: MentorRequest) => void;
-  addMentorMatch: (match: MentorMatch) => void;
-  updateMentorMatch: (match: MentorMatch) => void;
-  addDataRequest: (req: DataRequest) => void;
-  updateDataRequest: (req: DataRequest) => void;
-  addSubmission: (sub: FounderSubmission) => void;
-  updateSubmission: (sub: FounderSubmission) => void;
+  addMentorRequest: (req: MentorRequest) => Promise<{ data: MentorRequest | null; error: string | null }>;
+  updateMentorRequest: (req: MentorRequest) => Promise<{ data: MentorRequest | null; error: string | null }>;
+  addMentorMatch: (match: MentorMatch) => Promise<{ data: MentorMatch | null; error: string | null }>;
+  updateMentorMatch: (match: MentorMatch) => Promise<{ data: MentorMatch | null; error: string | null }>;
+  addDataRequest: (req: DataRequest) => Promise<{ data: DataRequest | null; error: string | null }>;
+  updateDataRequest: (req: DataRequest) => Promise<{ data: DataRequest | null; error: string | null }>;
+  addSubmission: (sub: FounderSubmission) => Promise<{ data: FounderSubmission | null; error: string | null }>;
+  updateSubmission: (sub: FounderSubmission) => Promise<{ data: FounderSubmission | null; error: string | null }>;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 11);
@@ -312,10 +329,31 @@ export const useStore = create<StoreState>()((set, get) => ({
         }
       },
 
-      addFounderActionItems: (items) =>
-        set((state) => ({
-          founderActionItems: [...state.founderActionItems, ...items.map((i) => ({ ...i, id: generateId() }))],
-        })),
+      addFounderActionItems: async (items) => {
+        const prev = get().founderActionItems;
+        const optimistic = items.map((i) => ({ ...i, id: generateId() }));
+        set((state) => ({ founderActionItems: [...state.founderActionItems, ...optimistic] }));
+        try {
+          const res = await addFounderActionItemsAction({ items });
+          if (res.error) {
+            set({ founderActionItems: prev });
+            return res;
+          }
+          if (res.data) {
+            set((state) => ({
+              founderActionItems: [
+                ...state.founderActionItems.filter((i) => !optimistic.some((o) => o.id === i.id)),
+                ...res.data!,
+              ],
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ founderActionItems: prev });
+          return { data: null, error: message || 'Failed to create action items' };
+        }
+      },
 
       // Startup CRUD
       createStartup: async (startup) => {
@@ -527,15 +565,41 @@ export const useStore = create<StoreState>()((set, get) => ({
           ],
         })),
 
-      markNotificationRead: (id) =>
+      markNotificationRead: async (id) => {
+        const prev = get().notifications;
         set((state) => ({
           notifications: state.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
-        })),
+        }));
+        try {
+          const res = await markNotificationReadAction(id);
+          if (res.error) {
+            set({ notifications: prev });
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ notifications: prev });
+          return { success: false, error: message || 'Failed to mark notification read' };
+        }
+      },
 
-      markAllNotificationsRead: () =>
+      markAllNotificationsRead: async () => {
+        const prev = get().notifications;
         set((state) => ({
           notifications: state.notifications.map((n) => ({ ...n, read: true })),
-        })),
+        }));
+        try {
+          const res = await markAllNotificationsReadAction();
+          if (res.error) {
+            set({ notifications: prev });
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ notifications: prev });
+          return { success: false, error: message || 'Failed to mark notifications read' };
+        }
+      },
 
       addActivityLog: (log) =>
         set((state) => ({ activityLogs: [{ ...log, id: generateId() }, ...state.activityLogs] })),
@@ -703,100 +767,334 @@ export const useStore = create<StoreState>()((set, get) => ({
         }
       },
 
-      addMentorRequest: (req) =>
-        set((state) => {
-          const targetStartup = state.startups.find((s) => s.id === req.startupId);
-          const newNotif: AppNotification = {
-            id: generateId(),
-            title: 'New Mentor Request',
-            message: `Mentor request logged for ${targetStartup?.name || req.startupId} (${req.expertiseNeeded.join(', ')}).`,
-            type: 'MENTOR_REQUEST',
+      addMentorRequest: async (req) => {
+        const prevReqs = get().mentorRequests;
+        const prevNotifs = get().notifications;
+        const targetStartup = get().startups.find((s) => s.id === req.startupId);
+        const newNotif: AppNotification = {
+          id: generateId(),
+          title: 'New Mentor Request',
+          message: `Mentor request logged for ${targetStartup?.name || req.startupId} (${req.expertiseNeeded.join(', ')}).`,
+          type: 'MENTOR_REQUEST',
+          startupId: req.startupId,
+          startupName: targetStartup?.name,
+          createdAt: new Date().toISOString(),
+          read: false,
+          actionUrl: '/mentor-connect',
+        };
+        set((state) => ({
+          mentorRequests: [...state.mentorRequests, req],
+          notifications: [newNotif, ...state.notifications],
+        }));
+
+        try {
+          const res = await addMentorRequestAction({
+            id: req.id,
             startupId: req.startupId,
-            startupName: targetStartup?.name,
-            createdAt: new Date().toISOString(),
-            read: false,
-            actionUrl: '/mentor-connect',
-          };
-          return {
-            mentorRequests: [...state.mentorRequests, req],
-            notifications: [newNotif, ...state.notifications],
-          };
-        }),
+            challenge: req.challenge,
+            expertiseNeeded: req.expertiseNeeded,
+            raisedBy: req.raisedBy,
+            createdOn: req.createdOn,
+            ranked: req.ranked,
+            recommendedMentorId: req.recommendedMentorId ?? null,
+            status: req.status,
+            mentorId: req.mentorId ?? null,
+            note: req.note ?? null,
+            fittTaskN: req.fittTaskN ?? null,
+          });
 
-      updateMentorRequest: (req) =>
-        set((state) => {
-          const targetStartup = state.startups.find((s) => s.id === req.startupId);
-          const newNotif: AppNotification = {
-            id: generateId(),
-            title: `Mentor Request: ${req.status}`,
-            message: `Request for ${targetStartup?.name || req.startupId} updated to ${req.status}.`,
-            type: 'MENTOR_RESPONSE',
+          if (res.error) {
+            set({ mentorRequests: prevReqs, notifications: prevNotifs });
+            return res;
+          }
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              mentorRequests: state.mentorRequests.map((r) => (r.id === req.id ? canonical : r)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ mentorRequests: prevReqs, notifications: prevNotifs });
+          return { data: null, error: message || 'Failed to add mentor request' };
+        }
+      },
+
+      updateMentorRequest: async (req) => {
+        const prevReqs = get().mentorRequests;
+        set((state) => ({
+          mentorRequests: state.mentorRequests.map((r) => (r.id === req.id ? req : r)),
+        }));
+
+        try {
+          const res = await updateMentorRequestAction({
+            id: req.id,
             startupId: req.startupId,
-            startupName: targetStartup?.name,
-            createdAt: new Date().toISOString(),
-            read: false,
-            actionUrl: '/mentor-connect',
-          };
-          return {
-            mentorRequests: state.mentorRequests.map((r) => (r.id === req.id ? req : r)),
-            notifications: [newNotif, ...state.notifications],
-          };
-        }),
+            challenge: req.challenge,
+            expertiseNeeded: req.expertiseNeeded,
+            raisedBy: req.raisedBy,
+            createdOn: req.createdOn,
+            ranked: req.ranked,
+            recommendedMentorId: req.recommendedMentorId ?? null,
+            status: req.status,
+            mentorId: req.mentorId ?? null,
+            note: req.note ?? null,
+            fittTaskN: req.fittTaskN ?? null,
+          });
 
-      addMentorMatch: (match) =>
-        set((state) => {
-          const mentor = state.mentors.find((m) => m.id === match.mentorId);
-          const req = state.mentorRequests.find((r) => r.id === match.requestId);
-          const startup = req ? state.startups.find((s) => s.id === req.startupId) : undefined;
-          const newNotif: AppNotification = {
-            id: generateId(),
-            title: 'Mentor Match Proposed',
-            message: `${mentor?.name || 'Mentor'} matched with ${startup?.name || 'Startup'} (${match.status}).`,
-            type: 'MENTOR_MATCH',
-            startupId: startup?.id,
-            startupName: startup?.name,
-            createdAt: new Date().toISOString(),
-            read: false,
-            actionUrl: '/mentor-connect',
-          };
-          return {
-            mentorMatches: [...state.mentorMatches, match],
-            notifications: [newNotif, ...state.notifications],
-          };
-        }),
+          if (res.error) {
+            set({ mentorRequests: prevReqs });
+            return res;
+          }
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              mentorRequests: state.mentorRequests.map((r) => (r.id === req.id ? canonical : r)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ mentorRequests: prevReqs });
+          return { data: null, error: message || 'Failed to update mentor request' };
+        }
+      },
 
-      updateMentorMatch: (match) =>
-        set((state) => {
-          const mentor = state.mentors.find((m) => m.id === match.mentorId);
-          const req = state.mentorRequests.find((r) => r.id === match.requestId);
-          const startup = req ? state.startups.find((s) => s.id === req.startupId) : undefined;
-          const newNotif: AppNotification = {
-            id: generateId(),
-            title: `Mentor Engagement: ${match.status}`,
-            message: `${mentor?.name || 'Mentor'} for ${startup?.name || 'Startup'} is now ${match.status}.`,
-            type: 'MENTOR_RESPONSE',
-            startupId: startup?.id,
-            startupName: startup?.name,
-            createdAt: new Date().toISOString(),
-            read: false,
-            actionUrl: '/mentor-connect',
-          };
-          return {
-            mentorMatches: state.mentorMatches.map((m) => (m.id === match.id ? match : m)),
-            notifications: [newNotif, ...state.notifications],
-          };
-        }),
+      addMentorMatch: async (match) => {
+        const prevMatches = get().mentorMatches;
+        const prevNotifs = get().notifications;
+        const mentor = get().mentors.find((m) => m.id === match.mentorId);
+        const req = get().mentorRequests.find((r) => r.id === match.requestId);
+        const startup = req ? get().startups.find((s) => s.id === req.startupId) : undefined;
+        const newNotif: AppNotification = {
+          id: generateId(),
+          title: 'Mentor Match Proposed',
+          message: `${mentor?.name || 'Mentor'} matched with ${startup?.name || 'Startup'} (${match.status}).`,
+          type: 'MENTOR_MATCH',
+          startupId: startup?.id,
+          startupName: startup?.name,
+          createdAt: new Date().toISOString(),
+          read: false,
+          actionUrl: '/mentor-connect',
+        };
+        set((state) => ({
+          mentorMatches: [...state.mentorMatches, match],
+          notifications: [newNotif, ...state.notifications],
+        }));
 
-      addDataRequest: (req) =>
-        set((state) => ({ dataRequests: [...state.dataRequests, req] })),
+        try {
+          const res = await addMentorMatchAction({
+            id: match.id,
+            requestId: match.requestId || null,
+            startupId: match.startupId,
+            mentorId: match.mentorId,
+            confirmedBy: match.confirmedBy,
+            confirmedOn: match.confirmedOn,
+            status: match.status,
+            sessions: match.sessions,
+          });
 
-      updateDataRequest: (req) =>
-        set((state) => ({ dataRequests: state.dataRequests.map((d) => (d.id === req.id ? req : d)) })),
+          if (res.error) {
+            set({ mentorMatches: prevMatches, notifications: prevNotifs });
+            return res;
+          }
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              mentorMatches: state.mentorMatches.map((m) => (m.id === match.id ? canonical : m)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ mentorMatches: prevMatches, notifications: prevNotifs });
+          return { data: null, error: message || 'Failed to create mentor match' };
+        }
+      },
 
-      addSubmission: (sub) =>
-        set((state) => ({ submissions: [...state.submissions, sub] })),
+      updateMentorMatch: async (match) => {
+        const prevMatches = get().mentorMatches;
+        set((state) => ({
+          mentorMatches: state.mentorMatches.map((m) => (m.id === match.id ? match : m)),
+        }));
 
-      updateSubmission: (sub) =>
-        set((state) => ({ submissions: state.submissions.map((s) => (s.id === sub.id ? sub : s)) })),
+        try {
+          const res = await updateMentorMatchAction({
+            id: match.id,
+            requestId: match.requestId || null,
+            startupId: match.startupId,
+            mentorId: match.mentorId,
+            confirmedBy: match.confirmedBy,
+            confirmedOn: match.confirmedOn,
+            status: match.status,
+            sessions: match.sessions,
+          });
+
+          if (res.error) {
+            set({ mentorMatches: prevMatches });
+            return res;
+          }
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              mentorMatches: state.mentorMatches.map((m) => (m.id === match.id ? canonical : m)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ mentorMatches: prevMatches });
+          return { data: null, error: message || 'Failed to update mentor match' };
+        }
+      },
+
+      addDataRequest: async (req) => {
+        const prevRequests = get().dataRequests;
+        set((state) => ({ dataRequests: [...state.dataRequests, req] }));
+
+        try {
+          const res = await addDataRequestAction({
+            id: req.id,
+            startupId: req.startupId,
+            type: req.type,
+            title: req.title,
+            message: req.message,
+            customQuestions: req.customQuestions,
+            milestoneIds: req.milestoneIds,
+            month: req.month,
+            dueDate: req.dueDate,
+            createdBy: req.createdBy,
+            createdOn: req.createdOn,
+            status: req.status,
+          });
+
+          if (res.error) {
+            set({ dataRequests: prevRequests });
+            return res;
+          }
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              dataRequests: state.dataRequests.map((d) => (d.id === req.id ? canonical : d)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ dataRequests: prevRequests });
+          return { data: null, error: message || 'Failed to create data request' };
+        }
+      },
+
+      updateDataRequest: async (req) => {
+        const prevRequests = get().dataRequests;
+        set((state) => ({
+          dataRequests: state.dataRequests.map((d) => (d.id === req.id ? req : d)),
+        }));
+
+        try {
+          const res = await updateDataRequestAction({
+            id: req.id,
+            startupId: req.startupId,
+            type: req.type,
+            title: req.title,
+            message: req.message,
+            customQuestions: req.customQuestions,
+            milestoneIds: req.milestoneIds,
+            month: req.month,
+            dueDate: req.dueDate,
+            status: req.status,
+          });
+
+          if (res.error) {
+            set({ dataRequests: prevRequests });
+            return res;
+          }
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              dataRequests: state.dataRequests.map((d) => (d.id === req.id ? canonical : d)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ dataRequests: prevRequests });
+          return { data: null, error: message || 'Failed to update data request' };
+        }
+      },
+
+      addSubmission: async (sub) => {
+        const prevSubs = get().submissions;
+        set((state) => ({ submissions: [...state.submissions, sub] }));
+
+        try {
+          const res = await addSubmissionAction({
+            id: sub.id,
+            requestId: sub.requestId,
+            startupId: sub.startupId,
+            submittedOn: sub.submittedOn,
+            payload: sub.payload,
+            status: sub.status,
+            reviewedBy: sub.reviewedBy,
+            reviewedOn: sub.reviewedOn,
+            reviewComment: sub.reviewComment,
+          });
+
+          if (res.error) {
+            set({ submissions: prevSubs });
+            return res;
+          }
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              submissions: state.submissions.map((s) => (s.id === sub.id ? canonical : s)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ submissions: prevSubs });
+          return { data: null, error: message || 'Failed to add submission' };
+        }
+      },
+
+      updateSubmission: async (sub) => {
+        const prevSubs = get().submissions;
+        set((state) => ({
+          submissions: state.submissions.map((s) => (s.id === sub.id ? sub : s)),
+        }));
+
+        try {
+          const res = await updateSubmissionAction({
+            id: sub.id,
+            requestId: sub.requestId,
+            startupId: sub.startupId,
+            submittedOn: sub.submittedOn,
+            payload: sub.payload,
+            status: sub.status,
+            reviewedBy: sub.reviewedBy,
+            reviewedOn: sub.reviewedOn,
+            reviewComment: sub.reviewComment,
+          });
+
+          if (res.error) {
+            set({ submissions: prevSubs });
+            return res;
+          }
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              submissions: state.submissions.map((s) => (s.id === sub.id ? canonical : s)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ submissions: prevSubs });
+          return { data: null, error: message || 'Failed to update submission' };
+        }
+      },
     })
 );

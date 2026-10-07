@@ -89,7 +89,7 @@ export default function MentorConnectPage() {
   const scopedRequests = mentorRequests.filter((r) => startupIds.has(r.startupId));
 
   // Handle New Mentor Request Submit
-  const handleCreateRequest = (e: React.FormEvent) => {
+  const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     const targetStartupId = selectedStartupId || accessibleStartups[0]?.id;
     if (!targetStartupId) {
@@ -102,7 +102,7 @@ export default function MentorConnectPage() {
     }
 
     const newReq: MentorRequest = {
-      id: `req-${Date.now().toString(36)}`,
+      id: crypto.randomUUID(),
       startupId: targetStartupId,
       challenge: challenge.trim(),
       expertiseNeeded: selectedExpertise,
@@ -112,7 +112,12 @@ export default function MentorConnectPage() {
       note: requestNote.trim() || undefined,
     };
 
-    addMentorRequest(newReq);
+    const res = await addMentorRequest(newReq);
+    if (res?.error) {
+      toast.error(res.error);
+      return;
+    }
+
     toast.success('Mentor request logged & notification dispatched to dashboard');
     setRequestModalOpen(false);
     setChallenge('');
@@ -121,7 +126,7 @@ export default function MentorConnectPage() {
   };
 
   // Handle Match Response Submit
-  const handleConfirmMatch = (e: React.FormEvent) => {
+  const handleConfirmMatch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!respondingRequest) return;
     const mentorIdToMatch = selectedMentorId || mentors[0]?.id;
@@ -131,7 +136,7 @@ export default function MentorConnectPage() {
     }
 
     const newMatch: MentorMatch = {
-      id: `m-match-${Date.now().toString(36)}`,
+      id: crypto.randomUUID(),
       requestId: respondingRequest.id,
       startupId: respondingRequest.startupId,
       mentorId: mentorIdToMatch,
@@ -140,7 +145,7 @@ export default function MentorConnectPage() {
       status: 'ACTIVE',
       sessions: [
         {
-          id: `sess-${Date.now()}`,
+          id: crypto.randomUUID(),
           date: new Date().toISOString().split('T')[0],
           topic: responseNote.trim() || 'Initial orientation and technical deep dive',
           nextStep: 'Action items agreed with founding team',
@@ -150,14 +155,19 @@ export default function MentorConnectPage() {
     };
 
     // Update Request
-    updateMentorRequest({
+    await updateMentorRequest({
       ...respondingRequest,
       status: 'MATCHED',
       mentorId: mentorIdToMatch,
       note: responseNote.trim() || respondingRequest.note,
     });
 
-    addMentorMatch(newMatch);
+    const res = await addMentorMatch(newMatch);
+    if (res?.error) {
+      toast.error(res.error);
+      return;
+    }
+
     toast.success('Mentor match confirmed! Both portfolio head & portfolio manager notified.');
     setRespondingRequest(null);
     setResponseNote('');
@@ -165,22 +175,27 @@ export default function MentorConnectPage() {
   };
 
   // Handle Log Session
-  const handleLogSession = (e: React.FormEvent) => {
+  const handleLogSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sessionModalMatch) return;
 
     const newSession = {
-      id: `sess-${Date.now()}`,
+      id: crypto.randomUUID(),
       date: new Date().toISOString().split('T')[0],
       topic: sessionTopic.trim() || 'Strategic Review',
       nextStep: sessionNextStep.trim() || 'Follow up next week',
       rating: sessionRating,
     };
 
-    updateMentorMatch({
+    const res = await updateMentorMatch({
       ...sessionModalMatch,
       sessions: [...sessionModalMatch.sessions, newSession],
     });
+
+    if (res?.error) {
+      toast.error(res.error);
+      return;
+    }
 
     toast.success('Mentoring session logged');
     setSessionModalMatch(null);

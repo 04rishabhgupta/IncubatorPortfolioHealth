@@ -43,9 +43,9 @@ export default function FounderPortal() {
   const openRequests = dataRequests.filter(r => r.startupId === startup.id && r.status === 'OPEN');
   const sActionItems = founderActionItems.filter(a => a.startupId === startup.id);
 
-  const handleFinancialSubmit = (req: DataRequest) => {
-    addSubmission({
-      id: `sub-${Math.random().toString(36).substr(2, 9)}`,
+  const handleFinancialSubmit = async (req: DataRequest) => {
+    const res = await addSubmission({
+      id: crypto.randomUUID(),
       requestId: req.id,
       startupId: startup.id,
       submittedOn: new Date().toISOString().split('T')[0],
@@ -55,14 +55,18 @@ export default function FounderPortal() {
       },
       status: 'PENDING_REVIEW'
     });
-    updateDataRequest({ ...req, status: 'SUBMITTED' });
+    if (res?.error) {
+      toast.error(res.error);
+      return;
+    }
+    await updateDataRequest({ ...req, status: 'SUBMITTED' });
     toast.success('Financials submitted successfully');
     setFinForm({ cashBalance: '', monthlyRevenue: '' });
   };
 
-  const handleTractionSubmit = (req: DataRequest) => {
-    addSubmission({
-      id: `sub-${Math.random().toString(36).substr(2, 9)}`,
+  const handleTractionSubmit = async (req: DataRequest) => {
+    const res = await addSubmission({
+      id: crypto.randomUUID(),
       requestId: req.id,
       startupId: startup.id,
       submittedOn: new Date().toISOString().split('T')[0],
@@ -73,7 +77,11 @@ export default function FounderPortal() {
       },
       status: 'PENDING_REVIEW'
     });
-    updateDataRequest({ ...req, status: 'SUBMITTED' });
+    if (res?.error) {
+      toast.error(res.error);
+      return;
+    }
+    await updateDataRequest({ ...req, status: 'SUBMITTED' });
     toast.success('Traction data submitted successfully');
     setTracForm({ customerConversations: '', pilots: '', payingCustomers: '' });
   };
