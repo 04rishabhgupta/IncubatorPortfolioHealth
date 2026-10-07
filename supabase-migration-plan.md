@@ -146,9 +146,9 @@ Conventions for every mutation:
 
 ## Phase 5: Optional
 
-- **Realtime notifications:** subscribe to `notification_recipients` for the current user.
-- **Storage:** private bucket for uploaded Excel files (audit) and milestone evidence, with startup-scoped policies.
-- **Real AI analysis:** if `ai_analysis` should come from an LLM rather than heuristics, move it to a background job that writes the column when done.
+- [x] **Realtime notifications:** subscribe to `notification_recipients` for the current user.
+- [x] **Storage:** private bucket for uploaded Excel files (audit) and milestone evidence, with startup-scoped policies.
+- [x] **Real AI analysis:** if `ai_analysis` should come from an LLM rather than heuristics, move it to a background job that writes the column when done.
 
 ## Phase 6: Production project (before real data)
 

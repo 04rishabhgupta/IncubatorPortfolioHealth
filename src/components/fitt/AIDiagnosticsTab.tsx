@@ -7,19 +7,38 @@ import { parseStartupExcel, generateStartupExcel } from '@/lib/excelService';
 import styles from './fitt.module.css';
 import { cx } from './helpers';
 import { computeInvestibilityScore, generateAIAnalysis, detectRedFlags } from '@/lib/aiAnalysis';
-import { Sparkles, ShieldAlert, AlertTriangle, CheckCircle, Award, FileSpreadsheet, Upload, Download, RefreshCw } from 'lucide-react';
+import { uploadAuditExcelAction } from '@/app/actions/storage';
+import { recomputeStartupAiAnalysisAction } from '@/app/actions/aiAnalysis';
+import { Sparkles, ShieldAlert, AlertTriangle, CheckCircle, Award, FileSpreadsheet, Upload, Download, RefreshCw, Cpu } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function AIDiagnosticsTab({ startup, metrics }: { startup: Startup; metrics?: MonthlyMetrics[] }) {
   const { updateStartup } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [syncing, setSyncing] = useState(false);
+  const [recomputingAi, setRecomputingAi] = useState(false);
 
   const investibility = startup.investibility || computeInvestibilityScore(startup, metrics);
   const redFlags = startup.aiAnalysis?.redFlags || detectRedFlags(startup, metrics);
   const aiAnalysis = startup.aiAnalysis || generateAIAnalysis(startup, metrics);
 
   const b = investibility.breakdown;
+
+  const handleRecomputeAi = async () => {
+    setRecomputingAi(true);
+    try {
+      const res = await recomputeStartupAiAnalysisAction(startup.id);
+      if (res.error) {
+        toast.error(`AI recomputation failed: ${res.error}`);
+      } else {
+        toast.success('Deep AI diagnostics and investibility recomputed and saved!');
+      }
+    } catch {
+      toast.error('Failed to run AI diagnostics');
+    } finally {
+      setRecomputingAi(false);
+    }
+  };
 
   const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -39,12 +58,23 @@ export function AIDiagnosticsTab({ startup, metrics }: { startup: Startup; metri
         // Automatically re-calculate AI investibility & red flags from new Excel data
         updatedStartup.investibility = computeInvestibilityScore(updatedStartup, metrics);
         updatedStartup.aiAnalysis = generateAIAnalysis(updatedStartup, metrics);
+
+        // Archive to private storage for auditing
+        try {
+          const formData = new FormData();
+          formData.append('startupId', startup.id);
+          formData.append('file', file);
+          await uploadAuditExcelAction(formData);
+        } catch (uploadErr) {
+          console.warn('Storage audit upload failed:', uploadErr);
+        }
+
         const res = await updateStartup(updatedStartup);
         if (res?.error) {
           toast.error(`Failed to update startup: ${res.error}`);
           return;
         }
-        toast.success(`Excel data updated! AI Diagnostics and parameters recalculated.`);
+        toast.success(`Excel data updated and archived! AI Diagnostics recalculated.`);
       } catch (err) {
         console.error('Failed to parse Excel:', err);
         toast.error('Failed to parse Excel file');
@@ -148,6 +178,30 @@ export function AIDiagnosticsTab({ startup, metrics }: { startup: Startup; metri
           >
             <Download style={{ width: 14, height: 14 }} />
             Export Current Sheet
+          </button>
+          <button
+            onClick={handleRecomputeAi}
+            disabled={recomputingAi}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: '#F1F5F9',
+              color: '#334155',
+              border: '1px solid #CBD5E1',
+              padding: '7px 14px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {recomputingAi ? (
+              <RefreshCw style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} />
+            ) : (
+              <Cpu style={{ width: 14, height: 14, color: '#4F46E5' }} />
+            )}
+            {recomputingAi ? 'Recomputing AI...' : 'Re-run Deep AI Diagnostics'}
           </button>
         </div>
       </div>

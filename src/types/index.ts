@@ -38,6 +38,7 @@ export interface Startup {
   founderToken: string;
   archived: boolean;
   regTags: RegTag[];
+  excelAuditPath?: string;
   fittTracker?: FittTracker;
   investibility?: InvestibilityScore;
   aiAnalysis?: {

@@ -6,6 +6,7 @@ import { useStore } from '@/store';
 import { Startup, Sector, Stage, IPStatus, CommercialSignal } from '@/types';
 import { parseStartupExcel, generateStartupExcel } from '@/lib/excelService';
 import { computeInvestibilityScore, generateAIAnalysis } from '@/lib/aiAnalysis';
+import { uploadAuditExcelAction } from '@/app/actions/storage';
 import {
   Upload,
   FileSpreadsheet,
@@ -56,6 +57,7 @@ export function StartupUploadModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [fileName, setFileName] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
 
   // Form State
@@ -89,6 +91,7 @@ export function StartupUploadModal({
 
     setParsing(true);
     setFileName(file.name);
+    setUploadedFile(file);
 
     const reader = new FileReader();
     reader.onload = (evt) => {
@@ -192,9 +195,24 @@ export function StartupUploadModal({
       return;
     }
 
+    const targetId = res?.data?.id || finalStartup.id;
+
+    if (uploadedFile) {
+      try {
+        const formData = new FormData();
+        formData.append('startupId', targetId);
+        formData.append('file', uploadedFile);
+        const uploadRes = await uploadAuditExcelAction(formData);
+        if (!uploadRes.error) {
+          toast.success('Excel audit file securely archived in private storage');
+        }
+      } catch (uploadErr) {
+        console.warn('Failed to archive audit Excel:', uploadErr);
+      }
+    }
+
     toast.success(`Startup "${finalStartup.name}" created! Redirecting to startup section...`);
     onClose();
-    const targetId = res?.data?.id || finalStartup.id;
     router.push(`/startups/${targetId}`);
   };
 

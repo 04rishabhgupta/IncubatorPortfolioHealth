@@ -74,6 +74,7 @@ export function startupFromRow(row: StartupRow, fittTracker?: FittTrackerRow | n
     founderToken: '', // Hashed on DB, populated if needed by founder link
     archived: row.archived,
     regTags: (row.reg_tags || []) as RegTag[],
+    excelAuditPath: ((row as Record<string, unknown>).excel_audit_path as string) || undefined,
     fittTracker: fittTracker?.data ? (fittTracker.data as unknown as FittTracker) : undefined,
     investibility: row.investibility ? (row.investibility as unknown as InvestibilityScore) : undefined,
     aiAnalysis: row.ai_analysis ? (row.ai_analysis as unknown as Startup['aiAnalysis']) : undefined,

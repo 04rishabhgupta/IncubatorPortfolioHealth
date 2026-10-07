@@ -10,6 +10,7 @@ import {
   revokeFounderLinkAction,
   FounderLinkStatus,
 } from '@/app/actions/founder';
+import { uploadAuditExcelAction, createSignedUrlAction } from '@/app/actions/storage';
 import { toast } from 'sonner';
 import styles from './fitt.module.css';
 import { cx, SECTOR_LABELS, STAGE_LABELS } from './helpers';
@@ -108,6 +109,48 @@ export function SettingsTab({
       mounted = false;
     };
   }, [startup.id]);
+
+  const [downloadingAudit, setDownloadingAudit] = useState(false);
+  const [uploadingAudit, setUploadingAudit] = useState(false);
+
+  const handleDownloadAudit = async () => {
+    if (!startup.excelAuditPath) return;
+    setDownloadingAudit(true);
+    try {
+      const res = await createSignedUrlAction(startup.excelAuditPath);
+      if (res.signedUrl) {
+        window.open(res.signedUrl, '_blank');
+      } else {
+        toast.error(res.error || 'Failed to generate download URL');
+      }
+    } catch {
+      toast.error('Failed to download audit file');
+    } finally {
+      setDownloadingAudit(false);
+    }
+  };
+
+  const handleUploadAudit = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAudit(true);
+    try {
+      const formData = new FormData();
+      formData.append('startupId', startup.id);
+      formData.append('file', file);
+      const res = await uploadAuditExcelAction(formData);
+      if (res.error) {
+        toast.error(res.error);
+      } else {
+        toast.success(`Audit spreadsheet "${file.name}" uploaded to private storage!`);
+        updateStartup({ ...startup, excelAuditPath: res.path || undefined });
+      }
+    } catch {
+      toast.error('Failed to upload audit file');
+    } finally {
+      setUploadingAudit(false);
+    }
+  };
 
   const handleRotateLink = async () => {
     setRotating(true);
@@ -486,6 +529,60 @@ export function SettingsTab({
                 </div>
               )}
             </>
+          )}
+        </div>
+      </div>
+
+      {/* Storage & Audit Archive Card */}
+      <div className={styles.card}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 16 }}>Storage & Audit Archive</div>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-2)' }}>
+              Secure cloud storage for raw Excel audit spreadsheets and milestone evidence artifacts.
+            </p>
+          </div>
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              padding: '3px 10px',
+              borderRadius: 999,
+              background: startup.excelAuditPath ? '#DCFCE7' : '#F1F5F9',
+              color: startup.excelAuditPath ? '#15803D' : '#64748B',
+              border: `1px solid ${startup.excelAuditPath ? '#86EFAC' : '#CBD5E1'}`,
+            }}
+          >
+            {startup.excelAuditPath ? 'Audit File Archived' : 'No Audit File Stored'}
+          </span>
+        </div>
+
+        <div style={{ marginTop: 14, fontSize: 13, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {startup.excelAuditPath && (
+            <button
+              type="button"
+              className={cx(styles.btn, styles.btnPrimary)}
+              style={{ fontSize: 12 }}
+              disabled={downloadingAudit}
+              onClick={handleDownloadAudit}
+            >
+              {downloadingAudit ? 'Generating Link...' : 'Download Latest Audit Excel'}
+            </button>
+          )}
+
+          {canModify && (
+            <label style={{ display: 'inline-block', margin: 0, cursor: 'pointer' }}>
+              <input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                style={{ display: 'none' }}
+                disabled={uploadingAudit}
+                onChange={handleUploadAudit}
+              />
+              <span className={styles.btn} style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center' }}>
+                {uploadingAudit ? 'Archiving to Storage...' : startup.excelAuditPath ? 'Replace Audit File (.xlsx)' : 'Upload & Archive Audit File (.xlsx)'}
+              </span>
+            </label>
           )}
         </div>
       </div>

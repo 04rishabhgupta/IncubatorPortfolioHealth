@@ -24,6 +24,7 @@ import {
   updateFounderMilestoneAction,
   confirmFounderMilestonesAction,
 } from '@/app/actions/founder';
+import { uploadMilestoneEvidenceAction } from '@/app/actions/storage';
 import {
   Activity,
   CheckCircle2,
@@ -36,6 +37,9 @@ import {
   Target,
   TrendingUp,
   Users,
+  Paperclip,
+  ExternalLink,
+  FileCheck,
 } from 'lucide-react';
 
 interface FounderPortalClientProps {
@@ -261,6 +265,44 @@ export function FounderPortalClient({
       }
     } catch {
       toast.error('Failed to save delay reason');
+    }
+  };
+
+  const [uploadingEvidenceId, setUploadingEvidenceId] = useState<string | null>(null);
+
+  const handleEvidenceUpload = async (milestone: Milestone, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingEvidenceId(milestone.id);
+    try {
+      const formData = new FormData();
+      formData.append('token', token);
+      formData.append('milestoneId', milestone.id);
+      formData.append('file', file);
+
+      const res = await uploadMilestoneEvidenceAction(formData);
+      if (res.error) {
+        toast.error(res.error);
+      } else {
+        setMilestones((prev) =>
+          prev.map((m) =>
+            m.id === milestone.id
+              ? {
+                  ...m,
+                  evidenceLink: res.evidenceLink || undefined,
+                  lastUpdatedBy: 'FOUNDER',
+                  lastUpdatedOn: new Date().toISOString().split('T')[0],
+                }
+              : m
+          )
+        );
+        toast.success(`Evidence "${file.name}" uploaded to private cloud storage!`);
+      }
+    } catch {
+      toast.error('Failed to upload evidence file');
+    } finally {
+      setUploadingEvidenceId(null);
     }
   };
 
@@ -779,6 +821,47 @@ export function FounderPortalClient({
                         />
                       </div>
                     )}
+
+                    {/* Evidence Attachment Section */}
+                    <div className="pt-2 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <Paperclip className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        {m.evidenceLink ? (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
+                              <FileCheck className="w-3 h-3 text-emerald-600" />
+                              Evidence Attached
+                            </span>
+                            <a
+                              href={m.evidenceLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-0.5 font-medium"
+                            >
+                              View file <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-zinc-400 italic">No evidence file attached yet</span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            className="hidden"
+                            disabled={uploadingEvidenceId === m.id}
+                            accept=".pdf,.png,.jpg,.jpeg,.xlsx,.doc,.docx"
+                            onChange={(e) => handleEvidenceUpload(m, e)}
+                          />
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-zinc-700 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 px-2.5 py-1 rounded-md border border-zinc-200 transition-colors">
+                            <Paperclip className="w-3 h-3" />
+                            {uploadingEvidenceId === m.id ? 'Uploading...' : m.evidenceLink ? 'Replace File' : 'Upload Evidence'}
+                          </span>
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 ))
               )}

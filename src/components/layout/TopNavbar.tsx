@@ -32,10 +32,12 @@ import { StartupUploadModal } from '@/components/portfolio/StartupUploadModal';
 import { users, demoPasswords } from '@/data/seed/users';
 import { createClient } from '@/lib/supabase/client';
 import { userFromProfile } from '@/lib/supabase/mappers';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 
 export function TopNavbar() {
   const router = useRouter();
   const pathname = usePathname();
+  useRealtimeNotifications();
   const {
     currentUser,
     login,
