@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Startup, User } from '@/types';
 import { useStore } from '@/store';
 import { can } from '@/lib/rbac';
-import { users } from '@/data/seed/users';
 import { getRunwayMonths } from '@/lib/derived';
 import styles from './fitt.module.css';
 import { cx } from './helpers';
@@ -38,7 +37,7 @@ const TABS: { key: TabKey; label: string }[] = [
 type DialogCtx = { kind: 'task'; n: number; tab: 'details' | 'mentors' } | { kind: 'hub' } | null;
 
 export function FittStartupPage({ startup, currentUser }: { startup: Startup; currentUser: User }) {
-  const { metrics, teams, mentors, mentorMatches, mentorRequests } = useStore();
+  const { metrics, teams, mentors, mentorMatches, mentorRequests, users } = useStore();
   const [tab, setTab] = useState<TabKey>('overview');
   const [dialogCtx, setDialogCtx] = useState<DialogCtx>(null);
 

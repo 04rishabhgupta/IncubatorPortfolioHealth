@@ -306,7 +306,7 @@ export default function PortfolioDashboard() {
               value={formatINRExact(totalDisbursed)}
               icon={IndianRupee}
               trend="~ +15.3%"
-              subtitle="of sanctioned"
+              subtitle={totalSanctioned > 0 ? `of ${formatINRExact(totalSanctioned)} sanctioned` : 'of sanctioned'}
             />
             <StatCard
               title="Mentors Active"

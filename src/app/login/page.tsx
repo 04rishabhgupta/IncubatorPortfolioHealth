@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { AlertCircle, ArrowRight, Eye, EyeOff, Loader2, TrendingUp, Zap, AlertTriangle } from 'lucide-react';
 import { useStore } from '@/store';
-import { authenticate } from '@/data/seed/users';
+import { demoPasswords } from '@/data/seed/users';
+import { createClient } from '@/lib/supabase/client';
+import { userFromProfile } from '@/lib/supabase/mappers';
 import { DemoCredentialsDialog } from '@/components/auth/DemoCredentialsDialog';
 import { LoginShowcase } from '@/components/auth/LoginShowcase';
 import { User } from '@/types';
@@ -14,6 +16,7 @@ type FieldErrors = { identifier?: string; password?: string };
 
 export default function LoginPage() {
   const login = useStore(s => s.login);
+  const hydrate = useStore(s => s.hydrate);
   const router = useRouter();
 
   const [identifier, setIdentifier] = useState('');
@@ -28,8 +31,13 @@ export default function LoginPage() {
   const identifierRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
-  const completeLogin = (user: User) => {
+  const completeLogin = async (user: User) => {
     login(user);
+    try {
+      await hydrate();
+    } catch (e) {
+      console.error('Hydration error:', e);
+    }
     toast.success(`Signed in as ${user.label}`);
     router.push(user.role === 'ADMIN' ? '/admin' : '/portfolio');
   };
@@ -47,27 +55,82 @@ export default function LoginPage() {
     if (errors.password) return passwordRef.current?.focus();
 
     setSubmitting(true);
-    // Simulated network latency so the loading state is perceptible.
-    await new Promise(r => setTimeout(r, 450));
-    const user = authenticate(identifier, password);
+    try {
+      const supabase = createClient();
+      const raw = identifier.trim().toLowerCase();
+      const email = raw.includes('@') ? raw : `${raw}@fitt.demo`;
 
-    if (!user) {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError || !authData.user) {
+        setSubmitting(false);
+        setFormError('Incorrect email/user ID or password. Please try again.');
+        passwordRef.current?.select();
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (profile) {
+        await completeLogin(userFromProfile(profile));
+      } else {
+        await completeLogin({
+          id: authData.user.id,
+          email: authData.user.email || email,
+          role: 'ADMIN',
+          label: 'Admin',
+        });
+      }
+    } catch {
       setSubmitting(false);
-      // Don't reveal which field was wrong.
-      setFormError('Incorrect email/user ID or password. Please try again.');
-      passwordRef.current?.select();
-      return;
+      setFormError('Connection failed. Please check your credentials and try again.');
     }
-    completeLogin(user);
   };
 
   const detectCapsLock = (e: KeyboardEvent<HTMLInputElement>) => {
     setCapsLock(e.getModifierState?.('CapsLock') ?? false);
   };
 
-  const handleDemoUse = (user: User) => {
+  const handleDemoUse = async (user: User) => {
     setDemoOpen(false);
-    completeLogin(user);
+    setSubmitting(true);
+    setFormError('');
+    try {
+      const supabase = createClient();
+      const pwd = demoPasswords[user.role];
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: pwd,
+      });
+
+      if (authError || !authData.user) {
+        setSubmitting(false);
+        setFormError('Failed to sign in with demo credentials.');
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (profile) {
+        await completeLogin(userFromProfile(profile));
+      } else {
+        await completeLogin(user);
+      }
+    } catch {
+      setSubmitting(false);
+      setFormError('Authentication failed. Please try again.');
+    }
   };
 
   const inputBase =
@@ -218,14 +281,16 @@ export default function LoginPage() {
               </div>
             </form>
 
-            <button
-              type="button"
-              onClick={() => setDemoOpen(true)}
-              aria-haspopup="dialog"
-              className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-300 text-[15px] font-medium text-zinc-700 transition-colors hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-600/20"
-            >
-              <Zap className="h-4 w-4" aria-hidden /> Demo Credentials
-            </button>
+            {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+              <button
+                type="button"
+                onClick={() => setDemoOpen(true)}
+                aria-haspopup="dialog"
+                className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-300 text-[15px] font-medium text-zinc-700 transition-colors hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-600/20"
+              >
+                <Zap className="h-4 w-4" aria-hidden /> Demo Credentials
+              </button>
+            )}
 
             <p className="mt-6 text-center text-xs text-zinc-500">
               Secure access · Role-based permissions · FITT, IIT Delhi
@@ -234,7 +299,9 @@ export default function LoginPage() {
         </div>
       </main>
 
-      <DemoCredentialsDialog open={demoOpen} onOpenChange={setDemoOpen} onUse={handleDemoUse} />
+      {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+        <DemoCredentialsDialog open={demoOpen} onOpenChange={setDemoOpen} onUse={handleDemoUse} />
+      )}
     </div>
   );
 }

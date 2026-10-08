@@ -6,7 +6,7 @@ import { useStore } from '@/store';
 import { Startup, Sector, Stage, IPStatus, CommercialSignal } from '@/types';
 import { parseStartupExcel, generateStartupExcel } from '@/lib/excelService';
 import { computeInvestibilityScore, generateAIAnalysis } from '@/lib/aiAnalysis';
-import { users } from '@/data/seed/users';
+import { uploadAuditExcelAction } from '@/app/actions/storage';
 import {
   Upload,
   FileSpreadsheet,
@@ -53,10 +53,11 @@ export function StartupUploadModal({
   defaultAssociateId,
 }: StartupUploadModalProps) {
   const router = useRouter();
-  const { createStartup, startups } = useStore();
+  const { createStartup, startups, users } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [fileName, setFileName] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
 
   // Form State
@@ -73,8 +74,10 @@ export function StartupUploadModal({
   const [commercialSignal, setCommercialSignal] = useState<CommercialSignal>('PAYING');
   const [grantSanctioned, setGrantSanctioned] = useState(5000000);
   const [grantDisbursed, setGrantDisbursed] = useState(3000000);
-  const [managerId, setManagerId] = useState(defaultManagerId || 'im1');
-  const [associateId, setAssociateId] = useState<string | null>(defaultAssociateId || 'ia1');
+  const managers = users.filter((u) => u.role === 'INVESTMENT_MANAGER');
+  const defaultMgr = defaultManagerId || managers[0]?.id || '';
+  const [managerId, setManagerId] = useState(defaultMgr);
+  const [associateId, setAssociateId] = useState<string | null>(defaultAssociateId || null);
 
   // Preserved parsed FITT tracker if uploaded via Excel
   const [parsedTracker, setParsedTracker] = useState<Startup['fittTracker'] | undefined>(undefined);
@@ -88,6 +91,7 @@ export function StartupUploadModal({
 
     setParsing(true);
     setFileName(file.name);
+    setUploadedFile(file);
 
     const reader = new FileReader();
     reader.onload = (evt) => {
@@ -145,7 +149,7 @@ export function StartupUploadModal({
   };
 
   // Form Submit Handler
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       toast.error('Startup name is required');
@@ -185,13 +189,33 @@ export function StartupUploadModal({
       aiAnalysis: generateAIAnalysis(baseStartup),
     };
 
-    createStartup(finalStartup);
+    const res = await createStartup(finalStartup);
+    if (res?.error) {
+      toast.error(`Failed to create startup: ${res.error}`);
+      return;
+    }
+
+    const targetId = res?.data?.id || finalStartup.id;
+
+    if (uploadedFile) {
+      try {
+        const formData = new FormData();
+        formData.append('startupId', targetId);
+        formData.append('file', uploadedFile);
+        const uploadRes = await uploadAuditExcelAction(formData);
+        if (!uploadRes.error) {
+          toast.success('Excel audit file securely archived in private storage');
+        }
+      } catch (uploadErr) {
+        console.warn('Failed to archive audit Excel:', uploadErr);
+      }
+    }
+
     toast.success(`Startup "${finalStartup.name}" created! Redirecting to startup section...`);
     onClose();
-    router.push(`/startups/${newId}`);
+    router.push(`/startups/${targetId}`);
   };
 
-  const managers = users.filter((u) => u.role === 'INVESTMENT_MANAGER');
   const associates = users.filter((u) => u.role === 'INVESTMENT_ASSOCIATE' && u.managerId === managerId);
 
   return (

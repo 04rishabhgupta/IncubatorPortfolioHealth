@@ -54,14 +54,18 @@ export default function AssessmentsPage() {
     return a.status === activeFilter;
   });
 
-  const handleQuickApprove = (assessmentId: string) => {
+  const handleQuickApprove = async (assessmentId: string) => {
     const ass = assessments.find((a) => a.id === assessmentId);
     if (!ass) return;
-    updateAssessment({
+    const res = await updateAssessment({
       ...ass,
       status: 'APPROVED',
       approvedBy: currentUser.id,
     });
+    if (res?.error) {
+      toast.error(`Approval failed: ${res.error}`);
+      return;
+    }
     toast.success('Health assessment approved successfully');
   };
 

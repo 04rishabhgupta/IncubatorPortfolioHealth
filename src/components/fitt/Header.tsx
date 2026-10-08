@@ -31,7 +31,7 @@ export function Header({ startup, manager, associate }: { startup: Startup; mana
 
     setSyncing(true);
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
         const buffer = evt.target?.result as ArrayBuffer;
         const parsed = parseStartupExcel(buffer, startup);
@@ -42,7 +42,11 @@ export function Header({ startup, manager, associate }: { startup: Startup; mana
         };
         updated.investibility = computeInvestibilityScore(updated);
         updated.aiAnalysis = generateAIAnalysis(updated);
-        updateStartup(updated);
+        const res = await updateStartup(updated);
+        if (res?.error) {
+          toast.error(`Failed to sync startup Excel: ${res.error}`);
+          return;
+        }
         toast.success(`Excel synced for ${startup.name}! Data and AI Diagnostics updated.`);
       } catch (err) {
         console.error('Failed to parse Excel:', err);

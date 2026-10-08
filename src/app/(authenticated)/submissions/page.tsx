@@ -61,31 +61,39 @@ export default function SubmissionsPage() {
   const openRequests = scopedRequests.filter((r) => r.status === 'OPEN');
   const overdueRequests = openRequests.filter((r) => new Date().getTime() > new Date(r.dueDate).getTime());
 
-  const handleApprove = (subId: string) => {
+  const handleApprove = async (subId: string) => {
     const sub = submissions.find((s) => s.id === subId);
     if (!sub) return;
-    updateSubmission({
+    const res = await updateSubmission({
       ...sub,
       status: 'ACCEPTED',
-      reviewedBy: currentUser.label,
+      reviewedBy: currentUser.id,
       reviewedOn: new Date().toISOString().split('T')[0],
     });
+    if (res?.error) {
+      toast.error(res.error);
+      return;
+    }
     toast.success('Submission accepted and logged');
   };
 
-  const handleReject = (subId: string) => {
+  const handleReject = async (subId: string) => {
     const sub = submissions.find((s) => s.id === subId);
     if (!sub) return;
-    updateSubmission({
+    const res = await updateSubmission({
       ...sub,
       status: 'RETURNED',
-      reviewedBy: currentUser.label,
+      reviewedBy: currentUser.id,
       reviewedOn: new Date().toISOString().split('T')[0],
     });
+    if (res?.error) {
+      toast.error(res.error);
+      return;
+    }
     toast.error('Submission returned for founder revision');
   };
 
-  const handleCreateRequest = (e: React.FormEvent) => {
+  const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     const stId = targetStartupId || accessibleStartups[0]?.id;
     if (!stId) {
@@ -101,8 +109,8 @@ export default function SubmissionsPage() {
       return;
     }
 
-    addDataRequest({
-      id: `dr-${Date.now().toString(36)}`,
+    const res = await addDataRequest({
+      id: crypto.randomUUID(),
       startupId: stId,
       createdBy: currentUser.id,
       createdOn: new Date().toISOString().split('T')[0],
@@ -111,6 +119,11 @@ export default function SubmissionsPage() {
       dueDate,
       status: 'OPEN',
     });
+
+    if (res?.error) {
+      toast.error(res.error);
+      return;
+    }
 
     toast.success('Data request created successfully');
     setRequestModalOpen(false);
