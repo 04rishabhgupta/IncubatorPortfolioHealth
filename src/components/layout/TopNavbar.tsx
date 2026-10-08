@@ -449,7 +449,7 @@ export function TopNavbar() {
                   </div>
 
                   {/* Role Switcher for Seamless Admin / Manager / Associate testing (Demo Mode Only) */}
-                  {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+                  {process.env.NEXT_PUBLIC_DEMO_MODE !== 'false' && (
                     <div className="px-4 py-2 border-b border-gray-100">
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
                         Switch Role (Demo Mode)

@@ -18,8 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatINR } from '@/lib/utils';
 import { getLatestApprovedAssessment, getRunwayMonths, getNeedsAttentionRules } from '@/lib/derived';
-import { DEMO_TODAY } from '@/lib/clock';
-import { users } from '@/data/seed/users';
+import { TODAY } from '@/lib/clock';
 import {
   ArrowLeft,
   ExternalLink,
@@ -51,11 +50,13 @@ export default function StartupPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { isHydrated, currentUser, startups, updateStartup, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, teams } = useStore();
+  const { isHydrated, currentUser, startups, updateStartup, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, teams, users } = useStore();
   
   const user = currentUser || users[0];
   const accessibleStartups = user ? scopeStartups(user, startups) : startups;
-  const startup = accessibleStartups.find(s => s.id === id) || startups.find(s => s.id === id);
+  const startup =
+    accessibleStartups.find(s => s.id === id || (id === 's31' && s.name.toLowerCase().includes('indigotex'))) ||
+    startups.find(s => s.id === id || (id === 's31' && s.name.toLowerCase().includes('indigotex')));
 
   const [formData, setFormData] = useState({
     name: startup?.name || '',
@@ -103,7 +104,7 @@ export default function StartupPage() {
   const sMatches = mentorMatches.filter(m => m.startupId === id);
   const sTeam = teams.filter(t => t.startupId === id);
 
-  const attentionRules = getNeedsAttentionRules(id, { metrics, assessments, milestones, dataRequests, submissions }, DEMO_TODAY);
+  const attentionRules = getNeedsAttentionRules(id, { metrics, assessments, milestones, dataRequests, submissions }, TODAY);
 
   // Dimension chart data
   const dimensionData = latestAss ? Object.entries(latestAss.dimensions).map(([key, val]) => ({

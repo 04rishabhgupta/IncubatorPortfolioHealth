@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { ArrowUpDown, AlertTriangle, Download, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatINR } from '@/lib/utils';
-import { users } from '@/data/seed/users';
+import { useStore } from '@/store';
 
 export type PortfolioRow = {
   startup: Startup;
@@ -79,7 +79,7 @@ export const columns: ColumnDef<PortfolioRow>[] = [
     accessorFn: (row) => row.startup.managerId,
     header: 'Portfolio Head',
     cell: ({ row }) => {
-      const u = users.find((u) => u.id === row.original.startup.managerId);
+      const u = useStore.getState().users.find((u) => u.id === row.original.startup.managerId);
       return <span className="text-sm whitespace-nowrap">{u ? u.label : '-'}</span>;
     },
     filterFn: (row, id, value: string[]) => {
@@ -91,7 +91,7 @@ export const columns: ColumnDef<PortfolioRow>[] = [
     accessorFn: (row) => row.startup.associateId,
     header: 'Portfolio Manager',
     cell: ({ row }) => {
-      const u = users.find((u) => u.id === row.original.startup.associateId);
+      const u = useStore.getState().users.find((u) => u.id === row.original.startup.associateId);
       return <span className="text-sm whitespace-nowrap">{u ? u.label : 'Unassigned'}</span>;
     },
     filterFn: (row, id, value: string[]) => {

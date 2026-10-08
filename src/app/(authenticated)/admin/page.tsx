@@ -1,7 +1,7 @@
 'use client';
 
 import { useStore } from '@/store';
-import { DEMO_TODAY } from '@/lib/clock';
+import { TODAY } from '@/lib/clock';
 import { getLatestApprovedAssessment, getRunwayMonths, getNeedsAttentionRules } from '@/lib/derived';
 import { formatINRExact } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -61,7 +61,7 @@ export default function AdminOverview() {
   let healthCount = 0;
   let currentMonthAssApproved = 0;
 
-  const demoDate = new Date(DEMO_TODAY);
+  const demoDate = new Date(TODAY);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const prevMonthStr = `${demoDate.getFullYear()}-${String(demoDate.getMonth() + 1).padStart(2, '0')}`;
 
@@ -125,7 +125,7 @@ export default function AdminOverview() {
       mOverdueMilestones += sMilestones.filter((m) => {
         if (['NOT_STARTED', 'IN_PROGRESS', 'DELAYED', 'AT_RISK'].includes(m.status)) {
           const target = m.revisedDate || m.targetDate;
-          const diffDays = (new Date(DEMO_TODAY).getTime() - new Date(target).getTime()) / (1000 * 3600 * 24);
+          const diffDays = (new Date(TODAY).getTime() - new Date(target).getTime()) / (1000 * 3600 * 24);
           return diffDays > 14;
         }
         return false;
@@ -140,7 +140,7 @@ export default function AdminOverview() {
       if (allAccepted.length === 0) {
         mOverdueUpdates++;
       } else {
-        const diffDays = (new Date(DEMO_TODAY).getTime() - new Date(allAccepted[0].submittedOn).getTime()) / (1000 * 3600 * 24);
+        const diffDays = (new Date(TODAY).getTime() - new Date(allAccepted[0].submittedOn).getTime()) / (1000 * 3600 * 24);
         if (diffDays > 35) mOverdueUpdates++;
       }
 
@@ -251,7 +251,7 @@ export default function AdminOverview() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mAttention: any[] = [];
     mStartups.forEach((s) => {
-      const rules = getNeedsAttentionRules(s.id, { metrics, assessments, milestones, dataRequests, submissions }, DEMO_TODAY);
+      const rules = getNeedsAttentionRules(s.id, { metrics, assessments, milestones, dataRequests, submissions }, TODAY);
       if (rules.length > 0) {
         mAttention.push({ startup: s, rules });
       }

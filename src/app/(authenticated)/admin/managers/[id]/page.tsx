@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { useStore } from '@/store';
 import { useParams } from 'next/navigation';
-import { users } from '@/data/seed/users';
 import { getLatestApprovedAssessment, getRunwayMonths, getLatestMetrics } from '@/lib/derived';
-import { DEMO_TODAY } from '@/lib/clock';
+import { TODAY } from '@/lib/clock';
 import { DataTable } from '@/components/ui/data-table';
 import { columns, PortfolioRow } from '@/app/(authenticated)/portfolio/columns';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,7 +26,7 @@ import { toast } from 'sonner';
 export default function ManagerDrillDown() {
   const params = useParams();
   const mgrId = params.id as string;
-  const { startups, metrics, assessments, submissions, mentorMatches, milestones, dataRequests } = useStore();
+  const { startups, metrics, assessments, submissions, mentorMatches, milestones, dataRequests, users } = useStore();
   const [activeTab, setActiveTab] = useState<'portfolio' | 'associates' | 'compare'>('portfolio');
 
   const manager = users.find((u) => u.id === mgrId);
@@ -95,7 +94,7 @@ export default function ManagerDrillDown() {
     const overdueM = sMilestones.filter((m) => {
       if (['NOT_STARTED', 'IN_PROGRESS', 'DELAYED', 'AT_RISK'].includes(m.status)) {
         const target = m.revisedDate || m.targetDate;
-        return (new Date(DEMO_TODAY).getTime() - new Date(target).getTime()) / (1000 * 3600 * 24) > 14;
+        return (new Date(TODAY).getTime() - new Date(target).getTime()) / (1000 * 3600 * 24) > 14;
       }
       return false;
     }).length;
@@ -106,7 +105,7 @@ export default function ManagerDrillDown() {
     let lastUpdateDays = null;
     if (allAccepted.length > 0) {
       lastUpdateDays = Math.floor(
-        (new Date(DEMO_TODAY).getTime() - new Date(allAccepted[0].submittedOn).getTime()) / (1000 * 3600 * 24)
+        (new Date(TODAY).getTime() - new Date(allAccepted[0].submittedOn).getTime()) / (1000 * 3600 * 24)
       );
     }
 

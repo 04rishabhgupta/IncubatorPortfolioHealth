@@ -17,7 +17,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
-import { users } from '@/data/seed/users';
 import {
   Activity,
   CheckCircle2,
@@ -28,7 +27,7 @@ import {
 import { toast } from 'sonner';
 
 export default function AssessmentsPage() {
-  const { currentUser, startups, assessments, updateAssessment } = useStore();
+  const { currentUser, startups, assessments, updateAssessment, users } = useStore();
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'APPROVED' | 'AWAITING_APPROVAL' | 'DRAFT'>('ALL');
 
   if (!currentUser) return null;

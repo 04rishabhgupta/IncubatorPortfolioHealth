@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { FittTracker } from '@/types';
 import { useStore } from '@/store';
-import { DEMO_TODAY } from '@/lib/clock';
+import { TODAY } from '@/lib/clock';
 import styles from './fitt.module.css';
 import { cx } from './helpers';
 
@@ -43,7 +43,7 @@ export function NeedsAttention({ startupId, tracker, founderName, actor }: { sta
       fix: i.fix,
       note: note.trim() || undefined,
       sharedBy: actor,
-      sharedOn: DEMO_TODAY,
+      sharedOn: TODAY,
     })));
     setSent(true);
   };

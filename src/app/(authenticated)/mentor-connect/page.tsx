@@ -17,7 +17,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
-import { users } from '@/data/seed/users';
 import { MentorRequest, MentorMatch, MCExpertise } from '@/types';
 import {
   Plus,
@@ -58,6 +57,7 @@ export default function MentorConnectPage() {
     updateMentorRequest,
     addMentorMatch,
     updateMentorMatch,
+    users,
   } = useStore();
 
   const [activeTab, setActiveTab] = useState<'matches' | 'requests' | 'pool'>('matches');

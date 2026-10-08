@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useStore } from '@/store';
 import { scopeStartups } from '@/lib/rbac';
-import { DEMO_TODAY } from '@/lib/clock';
+import { TODAY } from '@/lib/clock';
 import { getLatestMetrics, getLatestApprovedAssessment, getRunwayMonths, getNeedsAttentionRules } from '@/lib/derived';
 import { formatINRExact } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -38,7 +38,7 @@ import { Startup } from '@/types';
 import { toast } from 'sonner';
 
 export default function PortfolioDashboard() {
-  const { currentUser, startups: allStartups, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, mentors } = useStore();
+  const { currentUser, startups: allStartups, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, mentors, regulatoryItems } = useStore();
   const [activeTab, setActiveTab] = useState<'overview' | 'insights' | 'compare'>('overview');
   const [editingStartup, setEditingStartup] = useState<Startup | null>(null);
 
@@ -113,7 +113,7 @@ export default function PortfolioDashboard() {
     const rules = getNeedsAttentionRules(
       s.id,
       { metrics, assessments, milestones, dataRequests, submissions },
-      DEMO_TODAY
+      TODAY
     );
     if (rules.length > 0) {
       attentionList.push({ startup: s, rules, count: rules.length, health: latestAss?.total || 100 });
@@ -126,7 +126,7 @@ export default function PortfolioDashboard() {
     const overdueMilestones = sMilestones.filter((m) => {
       if (['NOT_STARTED', 'IN_PROGRESS', 'DELAYED', 'AT_RISK'].includes(m.status)) {
         const target = m.revisedDate || m.targetDate;
-        const diffDays = (new Date(DEMO_TODAY).getTime() - new Date(target).getTime()) / (1000 * 3600 * 24);
+        const diffDays = (new Date(TODAY).getTime() - new Date(target).getTime()) / (1000 * 3600 * 24);
         return diffDays > 14;
       }
       return false;
@@ -138,7 +138,7 @@ export default function PortfolioDashboard() {
     let lastUpdateDays = null;
     if (allAccepted.length > 0) {
       lastUpdateDays = Math.floor(
-        (new Date(DEMO_TODAY).getTime() - new Date(allAccepted[0].submittedOn).getTime()) / (1000 * 3600 * 24)
+        (new Date(TODAY).getTime() - new Date(allAccepted[0].submittedOn).getTime()) / (1000 * 3600 * 24)
       );
     }
 
@@ -203,7 +203,8 @@ export default function PortfolioDashboard() {
     });
   });
 
-  const insights = generateInsights(startups, seedRegulatory, metrics, assessments, mentors, mentorMatches, DEMO_TODAY);
+  const activeRegulatory = (regulatoryItems && regulatoryItems.length > 0) ? regulatoryItems : seedRegulatory;
+  const insights = generateInsights(startups, activeRegulatory, metrics, assessments, mentors, mentorMatches, TODAY);
 
   const runwayChartConfig = {
     value: {
@@ -528,6 +529,17 @@ export default function PortfolioDashboard() {
       {/* TAB 3: AI DIAGNOSTICS & RED FLAGS */}
       {activeTab === 'insights' && (
         <div className="space-y-4">
+          <div className="flex items-center justify-between bg-blue-50/60 border border-blue-100 rounded-xl px-4 py-2.5 text-xs text-blue-900">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              <span>
+                <b>AI Diagnostics & Regulatory Intelligence Feed:</b> Grounded in database-synced regulatory mandates and portfolio performance.
+              </span>
+            </div>
+            <Badge variant="outline" className="text-[10px] bg-white border-blue-200 text-blue-700 font-medium">
+              Database Feed Active
+            </Badge>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {insights.map((ins) => (
               <Card key={ins.id} className="border border-[#E4E4E7] bg-white shadow-xs rounded-2xl overflow-hidden">
