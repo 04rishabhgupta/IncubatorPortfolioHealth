@@ -163,9 +163,9 @@ Triggered by decision D5: complete this before the first real startup is entered
 
 ## Phase 7: Cleanup
 
-- [ ] Remove seed files from the app bundle (seed script only).
-- [ ] Replace `DEMO_TODAY` in `src/lib/clock.ts` (used in 8 files) with the real date.
-- [ ] Regulatory feed and `generateInsights()` run on sample data: label as sample or connect a real feed.
+- [x] Remove seed files from the app bundle (seed script only). All dummy startups pruned from backend Supabase and frontend; real Indigotex feed preserved exclusively.
+- [x] Replace `DEMO_TODAY` in `src/lib/clock.ts` (used across all screens) with dynamic `TODAY` (`getTodayDateString()`).
+- [x] Regulatory feed and `generateInsights()` connected to live database table (`regulatory_items`) with store hydration and labeled in insights dashboard.
 
 ## Risks
 

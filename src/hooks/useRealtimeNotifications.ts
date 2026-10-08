@@ -21,12 +21,13 @@ export function useRealtimeNotifications() {
   useEffect(() => {
     if (!currentUser?.id) return;
 
-    const supabase = createClient();
-    const recipientId = currentUser.id;
+    try {
+      const supabase = createClient();
+      const recipientId = currentUser.id;
 
-    // Create a unique channel for this user's notifications
-    const channel = supabase
-      .channel(`realtime:notifications:${recipientId}`)
+      // Create a unique channel for this user's notifications
+      const channel = supabase
+        .channel(`realtime:notifications:${recipientId}`)
       .on(
         'postgres_changes',
         {
@@ -102,8 +103,13 @@ export function useRealtimeNotifications() {
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      return () => {
+        try {
+          supabase.removeChannel(channel);
+        } catch {}
+      };
+    } catch (err) {
+      console.warn('Realtime notifications subscription unavailable:', err);
+    }
   }, [currentUser?.id]);
 }

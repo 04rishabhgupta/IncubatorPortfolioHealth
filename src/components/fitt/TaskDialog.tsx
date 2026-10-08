@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useStore } from '@/store';
-import { DEMO_TODAY } from '@/lib/clock';
+import { TODAY } from '@/lib/clock';
 import { FittSupportTask, FittTracker, Mentor, MentorMatch, MentorRequest } from '@/types';
 import styles from './fitt.module.css';
 import { cx, statusDotClass } from './helpers';
@@ -46,7 +46,7 @@ export function TaskDialog({
       challenge: `#${taskN} ${task.title}`,
       expertiseNeeded: [],
       raisedBy: 'STAFF',
-      createdOn: DEMO_TODAY,
+      createdOn: TODAY,
       status: 'PENDING',
       mentorId,
       note,

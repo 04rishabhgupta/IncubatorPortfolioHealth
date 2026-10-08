@@ -2,11 +2,10 @@
 
 import { useStore } from '@/store';
 import { TopNavbar } from '@/components/layout/TopNavbar';
-import { users } from '@/data/seed/users';
 import { useEffect } from 'react';
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
-  const { currentUser, hydrate, isHydrated } = useStore();
+  const { currentUser, users, hydrate, isHydrated } = useStore();
 
   useEffect(() => {
     hydrate();

@@ -1,25 +1,13 @@
 import { MentorRequest } from '@/types';
+
 export const mentorRequests: MentorRequest[] = [
-{
-  "id": "req_s22",
-  "startupId": "s22",
-  "challenge": "Founder requested mentor",
-  "expertiseNeeded": [
-    "Fundraising"
-  ],
-  "raisedBy": "FOUNDER",
-  "createdOn": "2026-10-01",
-  "status": "PENDING"
-},
-{
-  "id": "req_s13",
-  "startupId": "s13",
-  "challenge": "Supply chain setup",
-  "expertiseNeeded": [
-    "Supply Chain"
-  ],
-  "raisedBy": "STAFF",
-  "createdOn": "2026-09-30",
-  "status": "PENDING"
-}
+  {
+    id: 'req_s31_1',
+    startupId: 's31',
+    challenge: 'Denim costing, COGS and BOM teardown with an external denim-costing mentor',
+    expertiseNeeded: ['Supply Chain', 'Financial Modelling'],
+    raisedBy: 'STAFF',
+    createdOn: '2026-08-05',
+    status: 'PENDING',
+  },
 ];

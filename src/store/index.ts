@@ -44,6 +44,7 @@ import {
   User,
   FounderActionItem,
   AppNotification,
+  RegulatoryItem,
 } from '@/types';
 import { startups as seedStartups } from '@/data/seed/startups';
 import { metrics as seedMetrics } from '@/data/seed/metrics';
@@ -73,6 +74,7 @@ import {
   founderActionItemFromRow,
   activityLogFromRow,
   notificationFromRow,
+  regulatoryItemFromRow,
   userFromProfile,
 } from '@/lib/supabase/mappers';
 
@@ -105,6 +107,7 @@ interface StoreState {
   activityLogs: ActivityLog[];
   founderActionItems: FounderActionItem[];
   notifications: AppNotification[];
+  regulatoryItems: RegulatoryItem[];
 
   // Actions
   login: (user: User) => void;
@@ -161,6 +164,7 @@ export const useStore = create<StoreState>()((set, get) => ({
       activityLogs: [],
       founderActionItems: [],
       notifications: seedNotifications,
+      regulatoryItems: [],
 
       login: (user) => set({ currentUser: user }),
       logout: () => {
@@ -175,7 +179,6 @@ export const useStore = create<StoreState>()((set, get) => ({
         try {
           const supabase = createClient();
           const { data: { user: authUser } } = await supabase.auth.getUser();
-          if (!authUser) return;
 
           const [
             profilesRes,
@@ -195,6 +198,7 @@ export const useStore = create<StoreState>()((set, get) => ({
             logsRes,
             notifsRes,
             recipientsRes,
+            regulatoryRes,
           ] = await Promise.all([
             supabase.from('profiles').select('*'),
             supabase.from('startups').select('*'),
@@ -213,10 +217,11 @@ export const useStore = create<StoreState>()((set, get) => ({
             supabase.from('activity_logs').select('*'),
             supabase.from('notifications').select('*'),
             supabase.from('notification_recipients').select('*'),
+            supabase.from('regulatory_items').select('*'),
           ]);
 
           const loadedUsers = (profilesRes.data || []).map(userFromProfile);
-          const currentProfile = profilesRes.data?.find((p) => p.id === authUser.id);
+          const currentProfile = authUser ? profilesRes.data?.find((p) => p.id === authUser.id) : null;
           const currentAppUser = currentProfile ? userFromProfile(currentProfile) : null;
 
           const trackerMap = new Map((trackersRes.data || []).map((t) => [t.startup_id, t]));
@@ -243,6 +248,7 @@ export const useStore = create<StoreState>()((set, get) => ({
           const loadedTeams = (teamsRes.data || []).map(teamMemberFromRow);
           const loadedActionItems = (actionItemsRes.data || []).map(founderActionItemFromRow);
           const loadedLogs = (logsRes.data || []).map(activityLogFromRow);
+          const loadedRegulatory = (regulatoryRes.data || []).map(regulatoryItemFromRow);
 
           const readMap = new Map((recipientsRes.data || []).map((r) => [r.notification_id, Boolean(r.read_at)]));
           const loadedNotifications = (notifsRes.data || []).map((n) => notificationFromRow(n, readMap.get(n.id) || false));
@@ -251,22 +257,24 @@ export const useStore = create<StoreState>()((set, get) => ({
             isHydrated: true,
             currentUser: currentAppUser || state.currentUser,
             users: loadedUsers.length > 0 ? loadedUsers : state.users,
-            startups: loadedStartups,
-            metrics: loadedMetrics,
-            milestones: loadedMilestones,
-            assessments: loadedAssessments,
-            mentors: loadedMentors,
+            startups: loadedStartups.length > 0 ? loadedStartups : state.startups,
+            metrics: loadedMetrics.length > 0 ? loadedMetrics : state.metrics,
+            milestones: loadedMilestones.length > 0 ? loadedMilestones : state.milestones,
+            assessments: loadedAssessments.length > 0 ? loadedAssessments : state.assessments,
+            mentors: loadedMentors.length > 0 ? loadedMentors : state.mentors,
             mentorMatches: loadedMatches,
             mentorRequests: loadedMentorReqs,
             dataRequests: loadedDataReqs,
             submissions: loadedSubmissions,
-            teams: loadedTeams,
+            teams: loadedTeams.length > 0 ? loadedTeams : state.teams,
             founderActionItems: loadedActionItems,
             activityLogs: loadedLogs,
-            notifications: loadedNotifications,
+            notifications: loadedNotifications.length > 0 ? loadedNotifications : state.notifications,
+            regulatoryItems: loadedRegulatory,
           }));
         } catch (err) {
           console.error('Failed to hydrate from Supabase:', err);
+          set({ isHydrated: true });
         }
       },
 

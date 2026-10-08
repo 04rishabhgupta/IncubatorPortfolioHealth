@@ -1,7 +1,6 @@
 'use client';
 
 import { FormEvent, KeyboardEvent, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { AlertCircle, ArrowRight, Eye, EyeOff, Loader2, TrendingUp, Zap, AlertTriangle } from 'lucide-react';
 import { useStore } from '@/store';
@@ -17,7 +16,6 @@ type FieldErrors = { identifier?: string; password?: string };
 export default function LoginPage() {
   const login = useStore(s => s.login);
   const hydrate = useStore(s => s.hydrate);
-  const router = useRouter();
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -39,7 +37,7 @@ export default function LoginPage() {
       console.error('Hydration error:', e);
     }
     toast.success(`Signed in as ${user.label}`);
-    router.push(user.role === 'ADMIN' ? '/admin' : '/portfolio');
+    window.location.href = user.role === 'ADMIN' ? '/admin' : '/portfolio';
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -67,7 +65,7 @@ export default function LoginPage() {
 
       if (authError || !authData.user) {
         setSubmitting(false);
-        setFormError('Incorrect email/user ID or password. Please try again.');
+        setFormError(authError?.message || 'Incorrect email/user ID or password. Please try again.');
         passwordRef.current?.select();
         return;
       }
@@ -88,9 +86,10 @@ export default function LoginPage() {
           label: 'Admin',
         });
       }
-    } catch {
+    } catch (err: unknown) {
+      console.error('Login error:', err);
       setSubmitting(false);
-      setFormError('Connection failed. Please check your credentials and try again.');
+      setFormError(err instanceof Error ? err.message : 'Connection failed. Please check your credentials and try again.');
     }
   };
 
@@ -111,8 +110,9 @@ export default function LoginPage() {
       });
 
       if (authError || !authData.user) {
+        console.error('Demo auth error:', authError);
         setSubmitting(false);
-        setFormError('Failed to sign in with demo credentials.');
+        setFormError(authError?.message || 'Failed to sign in with demo credentials.');
         return;
       }
 
@@ -127,9 +127,10 @@ export default function LoginPage() {
       } else {
         await completeLogin(user);
       }
-    } catch {
+    } catch (err: unknown) {
+      console.error('Demo login error:', err);
       setSubmitting(false);
-      setFormError('Authentication failed. Please try again.');
+      setFormError(err instanceof Error ? err.message : 'Authentication failed. Please try again.');
     }
   };
 
@@ -281,7 +282,7 @@ export default function LoginPage() {
               </div>
             </form>
 
-            {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+            {process.env.NEXT_PUBLIC_DEMO_MODE !== 'false' && (
               <button
                 type="button"
                 onClick={() => setDemoOpen(true)}
@@ -299,7 +300,7 @@ export default function LoginPage() {
         </div>
       </main>
 
-      {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+      {process.env.NEXT_PUBLIC_DEMO_MODE !== 'false' && (
         <DemoCredentialsDialog open={demoOpen} onOpenChange={setDemoOpen} onUse={handleDemoUse} />
       )}
     </div>

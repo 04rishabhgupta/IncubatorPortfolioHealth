@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useStore } from '@/store';
-import { DEMO_TODAY } from '@/lib/clock';
+import { TODAY } from '@/lib/clock';
 import { FittTracker, Mentor, MentorMatch, MentorRequest } from '@/types';
 import styles from './fitt.module.css';
 import { initials } from './helpers';
@@ -55,7 +55,7 @@ export function MentorHub({
       challenge: task ? `#${taskN} ${task.title}` : `#${taskN}`,
       expertiseNeeded: [],
       raisedBy: 'STAFF',
-      createdOn: DEMO_TODAY,
+      createdOn: TODAY,
       status: 'PENDING',
       mentorId,
       note,
