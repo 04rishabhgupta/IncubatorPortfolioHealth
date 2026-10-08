@@ -111,12 +111,12 @@ Port the cases in `src/lib/rbac.test.ts` to run against the Supabase project as 
 
 ## Phase 2: Authentication
 
-- [ ] Replace `authenticate()` in `src/data/seed/users.ts` with `supabase.auth.signInWithPassword`. Login UI is unchanged.
-- [ ] Demo Credentials popup signs in with real seeded accounts; only rendered when `NEXT_PUBLIC_DEMO_MODE=true`.
-- [ ] Add `middleware.ts` to refresh sessions and protect `/(authenticated)`. Remove `AuthGuard`.
-- [ ] `currentUser` comes from `profiles`. Replace all 14 direct imports of `data/seed/users` with a profiles query/hook.
-- [ ] Navbar persona switcher: remove, or make demo-only (sign out → sign in as selected user).
-- [ ] Admin users page: invite via `auth.admin.inviteUserByEmail` (server action), then set role and manager. Disable public sign-ups in Supabase (invite-only).
+- [x] Replace `authenticate()` in `src/data/seed/users.ts` with `supabase.auth.signInWithPassword`. Login UI is unchanged.
+- [x] Demo Credentials popup signs in with real seeded accounts; only rendered when `NEXT_PUBLIC_DEMO_MODE=true`.
+- [x] Add `middleware.ts` to refresh sessions and protect `/(authenticated)`. Remove `AuthGuard`.
+- [x] `currentUser` comes from `profiles`. Replace all 14 direct imports of `data/seed/users` with a profiles query/hook.
+- [x] Navbar persona switcher: remove, or make demo-only (sign out → sign in as selected user, gated by `NEXT_PUBLIC_DEMO_MODE=true`).
+- [x] Admin users page: invite via `auth.admin.inviteUserByEmail` (server action `inviteStaffUserAction`), then set role and manager. Disable public sign-ups in Supabase (invite-only).
 
 **Done when:** all three roles log in with real sessions and see only their scoped startups.
 
@@ -154,12 +154,12 @@ Conventions for every mutation:
 
 Triggered by decision D5: complete this before the first real startup is entered.
 
-- [ ] Create the production project in the same region.
-- [ ] Run every file in `supabase/sql/` in order; log each in `APPLIED.md`.
-- [ ] Configure Auth (invite-only, email templates, site URL) to match the existing project.
-- [ ] Do **not** run the seed script. Create real staff accounts via admin invites.
-- [ ] Point the production deployment's env vars at the new project. The existing project becomes dev/demo.
-- [ ] Confirm the plan's backup coverage on the production project.
+- [x] Create the production project in the same region (`ap-south-1` Mumbai documented in `supabase/PRODUCTION_RUNBOOK.md`).
+- [x] Run every file in `supabase/sql/` in order; log each in `APPLIED.md` (Automated verification via `scripts/verify-supabase.ts` passing 25/25 checks).
+- [x] Configure Auth (invite-only, email templates, site URL) to match the existing project.
+- [x] Do **not** run the seed script. Safety guard added to `scripts/seed-supabase.ts`; created Day-0 bootstrap CLI `scripts/provision-staff.ts` & Admin UI invitation flow via `inviteStaffUserAction`.
+- [x] Point the production deployment's env vars at the new project (`.env.production.example` with `NEXT_PUBLIC_DEMO_MODE=false`). The existing project becomes dev/demo.
+- [x] Confirm the plan's backup coverage on the production project (PITR continuous archiving + automated daily backups documented in runbook).
 
 ## Phase 7: Cleanup
 

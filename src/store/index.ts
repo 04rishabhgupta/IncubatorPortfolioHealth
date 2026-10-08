@@ -26,6 +26,10 @@ import {
   markAllNotificationsReadAction,
 } from '@/app/actions/notifications';
 import {
+  inviteStaffUserAction,
+  updateStaffUserAction,
+} from '@/app/actions/users';
+import {
   Startup,
   MonthlyMetrics,
   HealthAssessment,
@@ -134,6 +138,8 @@ interface StoreState {
   updateDataRequest: (req: DataRequest) => Promise<{ data: DataRequest | null; error: string | null }>;
   addSubmission: (sub: FounderSubmission) => Promise<{ data: FounderSubmission | null; error: string | null }>;
   updateSubmission: (sub: FounderSubmission) => Promise<{ data: FounderSubmission | null; error: string | null }>;
+  inviteStaffUser: (input: unknown) => Promise<{ data: User | null; error: string | null }>;
+  updateStaffUser: (input: unknown) => Promise<{ data: User | null; error: string | null }>;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 11);
@@ -1094,6 +1100,40 @@ export const useStore = create<StoreState>()((set, get) => ({
           const message = err instanceof Error ? err.message : String(err);
           set({ submissions: prevSubs });
           return { data: null, error: message || 'Failed to update submission' };
+        }
+      },
+
+      inviteStaffUser: async (input: unknown) => {
+        try {
+          const res = await inviteStaffUserAction(input);
+          if (res.data) {
+            const newUser = res.data;
+            set((state) => ({
+              users: state.users.some((u) => u.id === newUser.id)
+                ? state.users.map((u) => (u.id === newUser.id ? newUser : u))
+                : [...state.users, newUser],
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { data: null, error: message || 'Failed to invite staff member' };
+        }
+      },
+
+      updateStaffUser: async (input: unknown) => {
+        try {
+          const res = await updateStaffUserAction(input);
+          if (res.data) {
+            const updated = res.data;
+            set((state) => ({
+              users: state.users.map((u) => (u.id === updated.id ? updated : u)),
+            }));
+          }
+          return res;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { data: null, error: message || 'Failed to update staff user' };
         }
       },
     })

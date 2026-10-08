@@ -34,6 +34,22 @@ export function uuidFor(entity: string, rawId: string): string {
 async function main() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE;
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  // Strict Production Safety Guard (Phase 6 requirement)
+  if (isDemoMode === 'false' || (isProduction && process.env.ALLOW_SEEDING !== 'true')) {
+    console.error('\n' + '='.repeat(80));
+    console.error('⛔ CRITICAL SAFETY CHECK: PRODUCTION SEEDING IS BLOCKED');
+    console.error('='.repeat(80));
+    console.error('This seed script is strictly intended for local dev/demo databases.');
+    console.error(`Current configuration: NEXT_PUBLIC_DEMO_MODE=${isDemoMode}, NODE_ENV=${process.env.NODE_ENV}`);
+    console.error('Never seed mock startups and demo passwords into a production Supabase project.');
+    console.error('To provision real staff accounts for production, use:');
+    console.error('  npx tsx scripts/provision-staff.ts');
+    console.error('='.repeat(80) + '\n');
+    process.exit(1);
+  }
 
   if (!supabaseUrl || !serviceRoleKey) {
     console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local');

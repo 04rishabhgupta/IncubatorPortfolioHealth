@@ -12,10 +12,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Users, Shield, Briefcase, UserCheck } from 'lucide-react';
+import { Users, Shield, Briefcase, UserCheck, UserPlus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { InviteStaffModal } from '@/components/admin/InviteStaffModal';
+import { useState } from 'react';
 
 export default function AdminUsersPage() {
-  const { users } = useStore();
+  const { users, currentUser } = useStore();
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const isAdmin = currentUser?.role === 'ADMIN';
+
   const adminCount = users.filter((u) => u.role === 'ADMIN').length;
   const imCount = users.filter((u) => u.role === 'INVESTMENT_MANAGER').length;
   const iaCount = users.filter((u) => u.role === 'INVESTMENT_ASSOCIATE').length;
@@ -32,6 +38,16 @@ export default function AdminUsersPage() {
             Incubator team hierarchy, portfolio head jurisdictions, and portfolio manager venture assignments.
           </p>
         </div>
+        {isAdmin && (
+          <Button
+            onClick={() => setInviteModalOpen(true)}
+            size="sm"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-2xs gap-1.5 self-start sm:self-auto"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Invite Team Member</span>
+          </Button>
+        )}
       </div>
 
       {/* Role Distribution Metric Strip */}
@@ -125,6 +141,11 @@ export default function AdminUsersPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <InviteStaffModal
+        open={inviteModalOpen}
+        onOpenChange={setInviteModalOpen}
+      />
     </div>
   );
 }

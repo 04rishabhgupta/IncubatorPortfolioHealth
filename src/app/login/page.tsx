@@ -281,14 +281,16 @@ export default function LoginPage() {
               </div>
             </form>
 
-            <button
-              type="button"
-              onClick={() => setDemoOpen(true)}
-              aria-haspopup="dialog"
-              className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-300 text-[15px] font-medium text-zinc-700 transition-colors hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-600/20"
-            >
-              <Zap className="h-4 w-4" aria-hidden /> Demo Credentials
-            </button>
+            {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+              <button
+                type="button"
+                onClick={() => setDemoOpen(true)}
+                aria-haspopup="dialog"
+                className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-300 text-[15px] font-medium text-zinc-700 transition-colors hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-600/20"
+              >
+                <Zap className="h-4 w-4" aria-hidden /> Demo Credentials
+              </button>
+            )}
 
             <p className="mt-6 text-center text-xs text-zinc-500">
               Secure access · Role-based permissions · FITT, IIT Delhi
@@ -297,7 +299,9 @@ export default function LoginPage() {
         </div>
       </main>
 
-      <DemoCredentialsDialog open={demoOpen} onOpenChange={setDemoOpen} onUse={handleDemoUse} />
+      {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+        <DemoCredentialsDialog open={demoOpen} onOpenChange={setDemoOpen} onUse={handleDemoUse} />
+      )}
     </div>
   );
 }

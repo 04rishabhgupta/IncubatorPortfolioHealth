@@ -448,54 +448,56 @@ export function TopNavbar() {
                     </Badge>
                   </div>
 
-                  {/* Role Switcher for Seamless Admin / Manager / Associate testing */}
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
-                      Switch Role (Demo Mode)
-                    </span>
-                    <div className="space-y-1">
-                      {users.slice(0, 3).map((u) => (
-                        <button
-                          key={u.id}
-                          onClick={async () => {
-                            setUserMenuOpen(false);
-                            try {
-                              const supabase = createClient();
-                              const pwd = demoPasswords[u.role];
-                              const { data: authData } = await supabase.auth.signInWithPassword({
-                                email: u.email,
-                                password: pwd,
-                              });
-                              if (authData?.user) {
-                                const { data: profile } = await supabase
-                                  .from('profiles')
-                                  .select('*')
-                                  .eq('id', authData.user.id)
-                                  .single();
-                                if (profile) login(userFromProfile(profile));
-                                else login(u);
-                                await hydrate();
-                              } else {
+                  {/* Role Switcher for Seamless Admin / Manager / Associate testing (Demo Mode Only) */}
+                  {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
+                        Switch Role (Demo Mode)
+                      </span>
+                      <div className="space-y-1">
+                        {users.slice(0, 3).map((u) => (
+                          <button
+                            key={u.id}
+                            onClick={async () => {
+                              setUserMenuOpen(false);
+                              try {
+                                const supabase = createClient();
+                                const pwd = demoPasswords[u.role];
+                                const { data: authData } = await supabase.auth.signInWithPassword({
+                                  email: u.email,
+                                  password: pwd,
+                                });
+                                if (authData?.user) {
+                                  const { data: profile } = await supabase
+                                    .from('profiles')
+                                    .select('*')
+                                    .eq('id', authData.user.id)
+                                    .single();
+                                  if (profile) login(userFromProfile(profile));
+                                  else login(u);
+                                  await hydrate();
+                                } else {
+                                  login(u);
+                                }
+                              } catch {
                                 login(u);
                               }
-                            } catch {
-                              login(u);
-                            }
-                            if (u.role === 'ADMIN') router.push('/admin');
-                            else router.push('/portfolio');
-                          }}
-                          className={`w-full text-left text-xs px-2 py-1 rounded-md flex items-center justify-between transition-colors ${
-                            currentUser.id === u.id
-                              ? 'bg-blue-50 text-blue-700 font-bold'
-                              : 'text-gray-600 hover:bg-gray-100'
-                          }`}
-                        >
-                          <span className="truncate">{u.label}</span>
-                          {currentUser.id === u.id && <UserCheck className="h-3 w-3 text-blue-600" />}
-                        </button>
-                      ))}
+                              if (u.role === 'ADMIN') router.push('/admin');
+                              else router.push('/portfolio');
+                            }}
+                            className={`w-full text-left text-xs px-2 py-1 rounded-md flex items-center justify-between transition-colors ${
+                              currentUser.id === u.id
+                                ? 'bg-blue-50 text-blue-700 font-bold'
+                                : 'text-gray-600 hover:bg-gray-100'
+                            }`}
+                          >
+                            <span className="truncate">{u.label}</span>
+                            {currentUser.id === u.id && <UserCheck className="h-3 w-3 text-blue-600" />}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="py-1">
                     <Link
