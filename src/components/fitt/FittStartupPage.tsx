@@ -78,6 +78,7 @@ export function FittStartupPage({ startup, currentUser }: { startup: Startup; cu
           runway={runway}
           founderName={founder?.name || 'the founder'}
           actor={currentUser.label}
+          investibility={startup.investibility}
         />
       )}
       {tab === 'ai' && <AIDiagnosticsTab startup={startup} metrics={sMetrics} />}

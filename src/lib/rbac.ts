@@ -111,7 +111,7 @@ export function can(user: User, action: Action, startup?: Startup): boolean {
       return false;
 
     case 'manage_mentor':
-      return user.role === 'ADMIN' || user.role === 'INVESTMENT_MANAGER';
+      return user.role === 'ADMIN' || user.role === 'INVESTMENT_MANAGER' || user.role === 'INVESTMENT_ASSOCIATE';
 
     case 'view_mentor_requests':
     case 'view_insights':

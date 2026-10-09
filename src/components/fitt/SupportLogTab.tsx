@@ -41,8 +41,8 @@ export function SupportLogTab({
       const first = mentors.find(m => m.id === taskConns[0].mentorId);
       return <span className={cx(styles.tchip, styles.tchipOk)}>Mentor: {first?.name}{taskConns.length > 1 ? ` +${taskConns.length - 1}` : ''}</span>;
     }
-    const sug = tracker.mentorSuggestions[t.n] || [];
-    return <span className={styles.tchip}>{sug.length} mentor matches</span>;
+    const sug = (tracker.mentorSuggestions[t.n] || []).filter(s => mentors.some(m => m.id === s.mentorId));
+    return sug.length > 0 ? <span className={styles.tchip}>{sug.length} mentor matches</span> : null;
   };
 
   return (

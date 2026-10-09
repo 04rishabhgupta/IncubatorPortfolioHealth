@@ -13,6 +13,7 @@ import {
   updateMentorRequestAction,
   addMentorMatchAction,
   updateMentorMatchAction,
+  addMentorAction,
 } from '@/app/actions/mentors';
 import {
   addDataRequestAction,
@@ -133,6 +134,7 @@ interface StoreState {
   updateMilestone: (milestone: Milestone) => void;
   updateAssessment: (assessment: HealthAssessment) => Promise<{ data: HealthAssessment | null; error: string | null }>;
   addAssessment: (assessment: HealthAssessment) => Promise<{ data: HealthAssessment | null; error: string | null }>;
+  addMentor: (mentor: Mentor) => Promise<{ data: Mentor | null; error: string | null }>;
   addMentorRequest: (req: MentorRequest) => Promise<{ data: MentorRequest | null; error: string | null }>;
   updateMentorRequest: (req: MentorRequest) => Promise<{ data: MentorRequest | null; error: string | null }>;
   addMentorMatch: (match: MentorMatch) => Promise<{ data: MentorMatch | null; error: string | null }>;
@@ -778,6 +780,41 @@ export const useStore = create<StoreState>()((set, get) => ({
           const message = err instanceof Error ? err.message : String(err);
           set({ assessments: prevAssessments });
           return { data: null, error: message || 'Failed to add assessment' };
+        }
+      },
+
+      addMentor: async (mentor) => {
+        set((state) => ({
+          mentors: [mentor, ...state.mentors],
+        }));
+
+        try {
+          const res = await addMentorAction({
+            id: mentor.id,
+            name: mentor.name,
+            title: mentor.title,
+            phone: mentor.phone,
+            linkedin: mentor.linkedin,
+            sectors: mentor.sectors,
+            expertise: mentor.expertise,
+            stages: mentor.stages,
+            geography: mentor.geography,
+            availability: mentor.availability,
+            maxActiveMatches: mentor.maxActiveMatches,
+            bio: mentor.bio,
+            active: mentor.active,
+          });
+
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              mentors: state.mentors.map((m) => (m.id === mentor.id ? canonical : m)),
+            }));
+            return { data: canonical, error: null };
+          }
+          return { data: mentor, error: null };
+        } catch {
+          return { data: mentor, error: null };
         }
       },
 

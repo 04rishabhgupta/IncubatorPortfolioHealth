@@ -51,6 +51,12 @@ describe('can', () => {
   it('prevents admin from drafting assessment', () => {
     expect(can(admin, 'draft_assessment', s1)).toBe(false);
   });
+
+  it('allows admin, portfolio heads, and portfolio managers to manage mentors', () => {
+    expect(can(admin, 'manage_mentor')).toBe(true);
+    expect(can(im1, 'manage_mentor')).toBe(true);
+    expect(can(ia1, 'manage_mentor')).toBe(true);
+  });
 });
 
 describe('startup assignment permissions', () => {

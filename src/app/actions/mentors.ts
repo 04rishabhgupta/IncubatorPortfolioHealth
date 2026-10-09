@@ -7,9 +7,10 @@ import {
   addMentorMatchSchema,
   updateMentorMatchSchema,
   logMentorSessionSchema,
+  addMentorSchema,
 } from '@/lib/validations/mentors';
-import { mentorRequestFromRow, mentorMatchFromRow } from '@/lib/supabase/mappers';
-import { MentorRequest, MentorMatch } from '@/types';
+import { mentorRequestFromRow, mentorMatchFromRow, mentorFromRow } from '@/lib/supabase/mappers';
+import { MentorRequest, MentorMatch, Mentor } from '@/types';
 import { Json } from '@/types/database';
 import { revalidatePath } from 'next/cache';
 
@@ -412,5 +413,56 @@ export async function logMentorSessionAction(rawInput: unknown): Promise<{ data:
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return { data: null, error: message || 'Failed to log mentor session' };
+  }
+}
+
+/**
+ * Creates a new mentor record in the pool.
+ */
+export async function addMentorAction(rawInput: unknown): Promise<{ data: Mentor | null; error: string | null }> {
+  try {
+    const validated = addMentorSchema.parse(rawInput);
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { data: null, error: 'Unauthorized: You must be logged in to add a mentor' };
+    }
+
+    const mentorId = toValidUuid(validated.id);
+
+    const { data: row, error: insertError } = await supabase
+      .from('mentors')
+      .insert({
+        id: mentorId,
+        name: validated.name,
+        title: validated.title,
+        phone: validated.phone || null,
+        linkedin: validated.linkedin || null,
+        sectors: validated.sectors,
+        expertise: validated.expertise,
+        stages: validated.stages,
+        geography: validated.geography,
+        availability: validated.availability,
+        max_active_matches: validated.maxActiveMatches,
+        bio: validated.bio || '',
+        active: validated.active,
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      return { data: null, error: insertError.message };
+    }
+
+    revalidatePath('/mentor-connect');
+    return { data: mentorFromRow(row), error: null };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { data: null, error: message || 'Failed to add mentor' };
   }
 }

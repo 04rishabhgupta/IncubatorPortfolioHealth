@@ -167,7 +167,12 @@ export default function PortfolioDashboard() {
   attentionList.sort((a, b) => b.count - a.count || a.health - b.health);
 
   const avgHealth = healthCount > 0 ? Math.round(totalHealth / healthCount) : 0;
-  const avgInvestibility = investibilityCount > 0 ? Math.round(totalInvestibility / investibilityCount) : 76;
+  const avgInvestibility = investibilityCount > 0 ? Math.round(totalInvestibility / investibilityCount) : 0;
+  const healthGrade = avgHealth >= 75 ? 'Grade A' : avgHealth >= 60 ? 'Grade B' : avgHealth >= 45 ? 'Grade C' : 'Grade D';
+  const healthTrend = avgHealth >= 70 ? '~ Healthy' : avgHealth >= 50 ? '~ Watch' : avgHealth >= 35 ? '~ At Risk' : '~ Critical';
+  const investGrade = avgInvestibility >= 88 ? 'Grade A+' : avgInvestibility >= 75 ? 'Grade A' : avgInvestibility >= 60 ? 'Grade B' : avgInvestibility >= 45 ? 'Grade C' : 'Grade D';
+  const activeApplications = submissions.filter((s) => s.status === 'PENDING_REVIEW').length;
+  const activeMentors = mentorMatches.filter((m) => m.status === 'ACTIVE').length;
 
   runwayValues.sort((a, b) => a - b);
   const medianRunway =
@@ -290,30 +295,30 @@ export default function PortfolioDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Total Startups"
-              value="1,247"
+              value={startups.length}
               icon={Building2}
-              trend="~ +12.5%"
+              trend={startups.length > 0 ? `~ ${startups.length} active` : '~ No active ventures'}
               subtitle="active ventures"
             />
             <StatCard
               title="Active Applications"
-              value="89"
+              value={activeApplications}
               icon={FileText}
-              trend="~ +8.2%"
+              trend={activeApplications > 0 ? '~ Pending review' : '~ All reviewed'}
               subtitle="pending review"
             />
             <StatCard
               title="Funding Disbursed"
               value={formatINRExact(totalDisbursed)}
               icon={IndianRupee}
-              trend="~ +15.3%"
+              trend={totalSanctioned > 0 ? `~ ${Math.round((totalDisbursed / totalSanctioned) * 100)}% deployed` : '~ Capital deployed'}
               subtitle={totalSanctioned > 0 ? `of ${formatINRExact(totalSanctioned)} sanctioned` : 'of sanctioned'}
             />
             <StatCard
               title="Mentors Active"
-              value="42"
+              value={activeMentors}
               icon={Users}
-              trend="~ +5"
+              trend="~ Active engagements"
               subtitle="engagements"
             />
           </div>
@@ -322,16 +327,16 @@ export default function PortfolioDashboard() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatCard
               title="Portfolio Avg Health"
-              value={`${avgHealth}/100`}
+              value={healthCount > 0 ? `${avgHealth}/100` : '-'}
               icon={Activity}
-              trend="~ Benchmark"
-              subtitle="Grade B+"
+              trend={healthCount > 0 ? healthTrend : '~ No data'}
+              subtitle={healthCount > 0 ? healthGrade : 'No evaluations'}
             />
             <StatCard
               title="Investibility Rating"
-              value={`${avgInvestibility}/100`}
+              value={investibilityCount > 0 ? `${avgInvestibility}/100` : '-'}
               icon={Sparkles}
-              trend="~ Grade A"
+              trend={investibilityCount > 0 ? `~ ${investGrade}` : '~ No data'}
               subtitle="investor-ready"
             />
             <StatCard

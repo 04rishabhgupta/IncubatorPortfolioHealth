@@ -81,12 +81,15 @@ export default function AdminOverview() {
     }
 
     const hasApprovedPrev = assessments.some(
-      (ass) => ass.startupId === s.id && ass.month === '2026-09' && ass.status === 'APPROVED'
+      (ass) => ass.startupId === s.id && ass.status === 'APPROVED'
     );
     if (hasApprovedPrev) currentMonthAssApproved++;
   });
 
   const avgHealth = healthCount > 0 ? Math.round(totalHealth / healthCount) : 0;
+  const pendingSubmissions = submissions.filter((s) => s.status === 'PENDING_REVIEW').length;
+  const healthGrade = avgHealth >= 75 ? 'Grade A' : avgHealth >= 60 ? 'Grade B' : avgHealth >= 45 ? 'Grade C' : 'Grade D';
+  const healthTrend = avgHealth >= 70 ? '~ Healthy' : avgHealth >= 50 ? '~ Watch' : avgHealth >= 35 ? '~ At Risk' : '~ Critical';
 
   // Manager Comparison Data
   const managerRows = managers.map((mgr) => {
@@ -131,7 +134,7 @@ export default function AdminOverview() {
         return false;
       }).length;
 
-      const hasApproved = assessments.some((ass) => ass.startupId === s.id && ass.month === '2026-09' && ass.status === 'APPROVED');
+      const hasApproved = assessments.some((ass) => ass.startupId === s.id && ass.status === 'APPROVED');
       if (hasApproved) currentAssApproved++;
 
       const allAccepted = submissions
@@ -286,30 +289,30 @@ export default function AdminOverview() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Startups"
-          value="1,247"
+          value={startups.length}
           icon={Building2}
-          trend="~ +12.5%"
+          trend={startups.length > 0 ? `~ ${startups.length} active` : '~ No active ventures'}
           subtitle="active ventures"
         />
         <StatCard
           title="Active Applications"
-          value="89"
+          value={pendingSubmissions}
           icon={FileText}
-          trend="~ +8.2%"
+          trend={pendingSubmissions > 0 ? '~ Pending review' : '~ All reviewed'}
           subtitle="pending review"
         />
         <StatCard
           title="Funding Disbursed"
           value={formatINRExact(totalDisbursed)}
           icon={IndianRupee}
-          trend="~ +15.3%"
+          trend={totalSanctioned > 0 ? `~ ${Math.round((totalDisbursed / totalSanctioned) * 100)}% deployed` : '~ Capital deployed'}
           subtitle={totalSanctioned > 0 ? `of ${formatINRExact(totalSanctioned)} sanctioned` : 'of sanctioned'}
         />
         <StatCard
           title="Mentors Active"
-          value={activeMatches > 0 ? String(activeMatches) : '42'}
+          value={activeMatches}
           icon={Users}
-          trend="~ +5"
+          trend="~ Active engagements"
           subtitle="engagements"
         />
       </div>
@@ -318,10 +321,10 @@ export default function AdminOverview() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard
           title="Portfolio Avg Health"
-          value={`${avgHealth}/100`}
+          value={healthCount > 0 ? `${avgHealth}/100` : '-'}
           icon={Activity}
-          trend="~ Benchmark"
-          subtitle="Grade B+"
+          trend={healthCount > 0 ? healthTrend : '~ No data'}
+          subtitle={healthCount > 0 ? healthGrade : 'No evaluations'}
         />
         <StatCard
           title="At-Risk & Critical"
@@ -343,8 +346,8 @@ export default function AdminOverview() {
           title="Quarterly Assessments"
           value={`${currentMonthAssApproved} / ${startups.length}`}
           icon={FileCheck2}
-          trend="~ September cycle"
-          subtitle="approved records"
+          trend="~ Approved records"
+          subtitle="finalized scorecards"
         />
       </div>
 
