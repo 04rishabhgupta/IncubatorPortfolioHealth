@@ -43,11 +43,12 @@ import {
   BarChart2,
   ExternalLink,
   ShieldAlert,
+  Presentation,
 } from 'lucide-react';
 
 export default function AdminOverview() {
   const router = useRouter();
-  const { startups, metrics, assessments, submissions, mentorMatches, milestones, dataRequests, users } = useStore();
+  const { startups, metrics, assessments, submissions, mentorMatches, milestones, dataRequests, users, investors, demoDays, pitchConnections } = useStore();
 
   const managers = users.filter((u) => u.role === 'INVESTMENT_MANAGER');
 
@@ -509,6 +510,63 @@ export default function AdminOverview() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Demo Day & Investor Introductions Overview */}
+      <Card className="shadow-2xs border border-blue-200/80 bg-gradient-to-br from-blue-50/40 via-white to-indigo-50/40">
+        <CardHeader className="p-5 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-blue-600 text-white rounded-lg">
+                <Presentation className="h-4 w-4" />
+              </div>
+              <div>
+                <CardTitle className="text-sm font-bold tracking-tight">
+                  Demo Day & VC Pitch Pipeline
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground">
+                  Institutional venture connections, investor directory & cohort showcases
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => router.push('/demo-day')}
+                className="text-xs font-semibold border-blue-300 text-blue-700 hover:bg-blue-100/60"
+              >
+                Go to Demo Day & Pitching →
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-5 pt-0">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+            <div className="bg-white p-3 rounded-lg border border-border">
+              <div className="text-[11px] font-semibold text-muted-foreground">Active Pitch Tracks</div>
+              <div className="text-lg font-bold text-foreground mt-0.5">
+                {pitchConnections.filter((p) => p.status !== 'PASSED').length}
+              </div>
+            </div>
+            <div className="bg-white p-3 rounded-lg border border-border">
+              <div className="text-[11px] font-semibold text-muted-foreground">Investors in Directory</div>
+              <div className="text-lg font-bold text-foreground mt-0.5">{investors.length}</div>
+            </div>
+            <div className="bg-white p-3 rounded-lg border border-border">
+              <div className="text-[11px] font-semibold text-muted-foreground">Upcoming Demo Days</div>
+              <div className="text-lg font-bold text-violet-700 mt-0.5">
+                {demoDays.filter((d) => d.status === 'UPCOMING' || d.status === 'LIVE').length}
+              </div>
+            </div>
+            <div className="bg-white p-3 rounded-lg border border-border">
+              <div className="text-[11px] font-semibold text-muted-foreground">Term Sheet / Committed</div>
+              <div className="text-lg font-bold text-emerald-700 mt-0.5">
+                {pitchConnections.filter((p) => p.status === 'TERM_SHEET' || p.status === 'COMMITTED').length}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Cross-portfolio Attention Items */}
       <Card className="shadow-2xs">

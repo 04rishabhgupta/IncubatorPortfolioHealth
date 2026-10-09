@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { StatCard } from '@/components/ui/stat-card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
   Activity,
@@ -22,6 +23,8 @@ import {
   AlertTriangle,
   TrendingUp,
   PieChart as PieChartIcon,
+  Presentation,
+  Send,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ComposedChart, Line, Legend, CartesianGrid } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
@@ -34,13 +37,17 @@ import { regulatory as seedRegulatory } from '@/data/seed/regulatory';
 import { StartupEditModal } from '@/components/portfolio/StartupEditModal';
 import { StartupComparison } from '@/components/portfolio/StartupComparison';
 import { generateStartupExcel } from '@/lib/excelService';
+import { ConnectStartupModal } from '@/components/demoday/ConnectStartupModal';
 import { Startup } from '@/types';
 import { toast } from 'sonner';
 
 export default function PortfolioDashboard() {
-  const { currentUser, startups: allStartups, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, mentors, regulatoryItems } = useStore();
+  const router = useRouter();
+  const { currentUser, startups: allStartups, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, mentors, regulatoryItems, pitchConnections } = useStore();
   const [activeTab, setActiveTab] = useState<'overview' | 'insights' | 'compare'>('overview');
   const [editingStartup, setEditingStartup] = useState<Startup | null>(null);
+  const [connectModalOpen, setConnectModalOpen] = useState(false);
+  const [selectedStartupId, setSelectedStartupId] = useState<string | undefined>(undefined);
 
   if (!currentUser) return null;
 
@@ -271,7 +278,33 @@ export default function PortfolioDashboard() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => router.push('/demo-day')}
+            className="text-xs font-semibold border-blue-200 text-blue-700 hover:bg-blue-50 flex items-center gap-1.5"
+          >
+            <Presentation className="h-3.5 w-3.5 text-blue-600" />
+            Demo Day & Pitches
+            {pitchConnections.length > 0 && (
+              <Badge className="bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0 ml-1">
+                {pitchConnections.length}
+              </Badge>
+            )}
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => {
+              setSelectedStartupId(undefined);
+              setConnectModalOpen(true);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5"
+          >
+            <Send className="h-3.5 w-3.5" />
+            Pitch to VC
+          </Button>
+
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'overview' | 'insights' | 'compare')} className="w-auto">
             <TabsList className="bg-muted p-1 rounded-lg">
               <TabsTrigger value="overview" className="text-xs font-semibold">
@@ -601,6 +634,13 @@ export default function PortfolioDashboard() {
           onDeleted={() => setEditingStartup(null)}
         />
       )}
+
+      {/* Connect to VC Modal */}
+      <ConnectStartupModal
+        isOpen={connectModalOpen}
+        onClose={() => setConnectModalOpen(false)}
+        preselectedStartupId={selectedStartupId}
+      />
     </div>
   );
 }

@@ -33,6 +33,8 @@ import {
   TrendingUp,
   Activity,
   IndianRupee,
+  Presentation,
+  Send,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
@@ -44,13 +46,14 @@ import { FittStartupPage } from '@/components/fitt/FittStartupPage';
 import { AIDiagnosticsTab } from '@/components/fitt/AIDiagnosticsTab';
 import { parseStartupExcel, generateStartupExcel } from '@/lib/excelService';
 import { computeInvestibilityScore, generateAIAnalysis } from '@/lib/aiAnalysis';
+import { ConnectStartupModal } from '@/components/demoday/ConnectStartupModal';
 import { Startup } from '@/types';
 
 export default function StartupPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { isHydrated, currentUser, startups, updateStartup, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, teams, users } = useStore();
+  const { isHydrated, currentUser, startups, updateStartup, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, teams, users, pitchConnections, investors } = useStore();
   
   const user = currentUser || users[0];
   const accessibleStartups = user ? scopeStartups(user, startups) : startups;
@@ -66,6 +69,7 @@ export default function StartupPage() {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [syncing, setSyncing] = useState(false);
+  const [connectModalOpen, setConnectModalOpen] = useState(false);
 
   if (!startup) {
     if (!isHydrated) {
@@ -282,6 +286,7 @@ export default function StartupPage() {
           <TabsTrigger value="mentors" className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent">Mentors</TabsTrigger>
           <TabsTrigger value="regulatory" className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent">Regulatory</TabsTrigger>
           <TabsTrigger value="team" className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent">Team</TabsTrigger>
+          <TabsTrigger value="pitches" className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent">Demo Day & Pitches</TabsTrigger>
           {canEdit && <TabsTrigger value="settings" className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent">Settings</TabsTrigger>}
         </TabsList>
 
@@ -564,6 +569,88 @@ export default function StartupPage() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="pitches">
+            <Card className="border-zinc-200 shadow-2xs">
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <div>
+                  <CardTitle className="text-base text-zinc-900 font-bold">Investor & VC Introductions</CardTitle>
+                  <CardDescription className="text-xs text-zinc-500 mt-0.5">
+                    Active syndicate pitch tracks, due diligence progress, and demo day invitations
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => router.push('/demo-day')}
+                    className="text-xs"
+                  >
+                    <Presentation className="h-3 w-3 mr-1" />
+                    Demo Day Platform
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => setConnectModalOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold"
+                  >
+                    <Send className="h-3 w-3 mr-1" />
+                    Pitch to Investor
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {pitchConnections.filter((p) => p.startupId === startup.id).length === 0 ? (
+                  <div className="p-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    <p className="text-sm text-zinc-500 mb-3">No pitch connections recorded for {startup.name} yet.</p>
+                    <Button
+                      size="sm"
+                      onClick={() => setConnectModalOpen(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold"
+                    >
+                      <Send className="h-3 w-3 mr-1.5" />
+                      Introduce to an Investor or VC
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {pitchConnections
+                      .filter((p) => p.startupId === startup.id)
+                      .map((p) => {
+                        const inv = investors.find((i) => i.id === p.investorId);
+                        return (
+                          <div
+                            key={p.id}
+                            className="p-4 rounded-xl border border-zinc-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                          >
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm text-zinc-900">{inv?.firm || 'Investor Firm'}</span>
+                                <span className="text-xs text-zinc-500">({inv?.name || 'Partner'} • {p.round})</span>
+                                <Badge className="bg-blue-100 text-blue-800 text-[10px] font-semibold">{p.status}</Badge>
+                              </div>
+                              <div className="text-xs text-zinc-600 mt-1">
+                                Target Ask: <b className="text-emerald-700 font-semibold">{p.askAmount}</b>
+                                {p.nextAction && <span> • Next: {p.nextAction}</span>}
+                              </div>
+                              {p.notes && <p className="text-xs text-zinc-500 mt-1">{p.notes}</p>}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => router.push('/demo-day')}
+                              className="text-xs text-blue-600 shrink-0"
+                            >
+                              Manage Track →
+                            </Button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {canEdit && (
             <TabsContent value="settings">
               <Card className="border-zinc-200 shadow-2xs">
@@ -593,6 +680,13 @@ export default function StartupPage() {
 
         </div>
       </Tabs>
+
+      {/* Connect to VC Modal */}
+      <ConnectStartupModal
+        isOpen={connectModalOpen}
+        onClose={() => setConnectModalOpen(false)}
+        preselectedStartupId={startup.id}
+      />
     </div>
   );
 }

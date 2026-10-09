@@ -47,6 +47,10 @@ export type Action =
   | 'export_csv'
   | 'view_insights'
   | 'action_insights'
+  | 'view_demo_day'
+  | 'manage_investor'
+  | 'create_pitch_connection'
+  | 'schedule_demo_day'
   | 'admin_settings';
 
 export function can(user: User, action: Action, startup?: Startup): boolean {
@@ -127,6 +131,22 @@ export function can(user: User, action: Action, startup?: Startup): boolean {
         if (!startup) return true;
         return startup.managerId === user.id;
       }
+      return false;
+
+    case 'view_demo_day':
+      return true;
+
+    case 'manage_investor':
+    case 'schedule_demo_day':
+      return user.role === 'ADMIN' || user.role === 'INVESTMENT_MANAGER' || user.role === 'INVESTMENT_ASSOCIATE';
+
+    case 'create_pitch_connection':
+      if (!startup) {
+        return user.role === 'ADMIN' || user.role === 'INVESTMENT_MANAGER' || user.role === 'INVESTMENT_ASSOCIATE';
+      }
+      if (user.role === 'ADMIN') return true;
+      if (user.role === 'INVESTMENT_MANAGER') return startup.managerId === user.id;
+      if (user.role === 'INVESTMENT_ASSOCIATE') return startup.associateId === user.id;
       return false;
 
     default:

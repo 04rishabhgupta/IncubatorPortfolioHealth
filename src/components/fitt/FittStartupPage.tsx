@@ -84,7 +84,7 @@ export function FittStartupPage({ startup, currentUser }: { startup: Startup; cu
       {tab === 'ai' && <AIDiagnosticsTab startup={startup} metrics={sMetrics} />}
       {tab === 'monthly' && <MonthlyCheckinTab tracker={tracker} />}
       {tab === 'review' && <SixMonthReviewTab tracker={tracker} />}
-      {tab === 'company' && <CompanyFundingTab tracker={tracker} />}
+      {tab === 'company' && <CompanyFundingTab tracker={tracker} startupId={startup.id} startupName={startup.name} />}
       {tab === 'strategy' && <StrategyTab tracker={tracker} />}
       {tab === 'dd' && <DueDiligenceTab tracker={tracker} />}
       {tab === 'support' && (
