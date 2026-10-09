@@ -285,7 +285,7 @@ export const useStore = create<StoreState>()((set, get) => ({
             metrics: loadedMetrics.length > 0 ? loadedMetrics : state.metrics,
             milestones: loadedMilestones.length > 0 ? loadedMilestones : state.milestones,
             assessments: loadedAssessments.length > 0 ? loadedAssessments : state.assessments,
-            mentors: loadedMentors.length > 0 ? loadedMentors : state.mentors,
+            mentors: loadedMentors,
             mentorMatches: loadedMatches,
             mentorRequests: loadedMentorReqs,
             dataRequests: loadedDataReqs,
