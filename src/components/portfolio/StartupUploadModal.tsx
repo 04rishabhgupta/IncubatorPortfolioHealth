@@ -288,11 +288,12 @@ export function StartupUploadModal({
         {parsedTracker && (
           <div className="mx-6 mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs text-blue-900">
             <div className="flex items-center gap-2">
-              <FileCheck className="h-4 w-4 text-blue-600" />
+              <FileCheck className="h-4 w-4 text-blue-600 shrink-0" />
               <span>
-                <b>Multi-Sheet Ingestion Active:</b> {parsedTracker.baseline.founders.length} founders,{' '}
-                {parsedTracker.baseline.capTable.length} cap table entries,{' '}
-                {parsedTracker.monthlyCheckins.length} monthly check-ins loaded into startup section.
+                <b>Auto-Extracted from Excel:</b> {name ? `"${name}" · ` : ''}{sector.replace(/_/g, ' ')} ·{' '}
+                {parsedTracker.baseline.founders.length} founders ·{' '}
+                {parsedTracker.valueChain.length} value chain stages ·{' '}
+                ₹{(grantSanctioned / 100000).toFixed(1)}L grants
               </span>
             </div>
           </div>
@@ -309,7 +310,7 @@ export function StartupUploadModal({
                 id="startup-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Indigotex Private Limited"
+                placeholder="e.g. Easiofy Solutions Private Limited"
                 className="focus-visible:ring-blue-600"
                 required
               />
@@ -323,7 +324,7 @@ export function StartupUploadModal({
                 id="one-liner"
                 value={oneLiner}
                 onChange={(e) => setOneLiner(e.target.value)}
-                placeholder="Sustainable bio-indigo dyeing solution for denim"
+                placeholder="e.g. AI platform for automated medical imaging & surgical planning"
                 className="focus-visible:ring-blue-600"
               />
             </div>
