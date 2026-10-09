@@ -84,3 +84,33 @@ export const logMentorSessionSchema = z.object({
 });
 
 export type LogMentorSessionInput = z.infer<typeof logMentorSessionSchema>;
+
+export const geographyEnum = z.enum([
+  'DELHI_NCR',
+  'NORTH',
+  'SOUTH',
+  'WEST',
+  'EAST',
+  'PAN_INDIA',
+  'INTERNATIONAL',
+]);
+
+export const availabilityEnum = z.enum(['LOW', 'MEDIUM', 'HIGH']);
+
+export const addMentorSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, 'Mentor name is required'),
+  title: z.string().min(1, 'Professional title is required'),
+  phone: z.string().optional(),
+  linkedin: z.string().optional(),
+  sectors: z.array(z.string()).default([]),
+  expertise: z.array(z.string()).default([]),
+  stages: z.array(z.string()).default([]),
+  geography: geographyEnum.default('PAN_INDIA'),
+  availability: availabilityEnum.default('MEDIUM'),
+  maxActiveMatches: z.number().int().min(1).max(20).default(3),
+  bio: z.string().default(''),
+  active: z.boolean().default(true),
+});
+
+export type AddMentorInput = z.infer<typeof addMentorSchema>;

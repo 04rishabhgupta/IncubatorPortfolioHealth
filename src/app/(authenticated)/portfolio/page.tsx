@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { StatCard } from '@/components/ui/stat-card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
   Activity,
@@ -22,6 +23,8 @@ import {
   AlertTriangle,
   TrendingUp,
   PieChart as PieChartIcon,
+  Presentation,
+  Send,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ComposedChart, Line, Legend, CartesianGrid } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
@@ -34,13 +37,17 @@ import { regulatory as seedRegulatory } from '@/data/seed/regulatory';
 import { StartupEditModal } from '@/components/portfolio/StartupEditModal';
 import { StartupComparison } from '@/components/portfolio/StartupComparison';
 import { generateStartupExcel } from '@/lib/excelService';
+import { ConnectStartupModal } from '@/components/demoday/ConnectStartupModal';
 import { Startup } from '@/types';
 import { toast } from 'sonner';
 
 export default function PortfolioDashboard() {
-  const { currentUser, startups: allStartups, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, mentors, regulatoryItems } = useStore();
+  const router = useRouter();
+  const { currentUser, startups: allStartups, metrics, assessments, milestones, dataRequests, submissions, mentorMatches, mentors, regulatoryItems, pitchConnections } = useStore();
   const [activeTab, setActiveTab] = useState<'overview' | 'insights' | 'compare'>('overview');
   const [editingStartup, setEditingStartup] = useState<Startup | null>(null);
+  const [connectModalOpen, setConnectModalOpen] = useState(false);
+  const [selectedStartupId, setSelectedStartupId] = useState<string | undefined>(undefined);
 
   if (!currentUser) return null;
 
@@ -167,7 +174,12 @@ export default function PortfolioDashboard() {
   attentionList.sort((a, b) => b.count - a.count || a.health - b.health);
 
   const avgHealth = healthCount > 0 ? Math.round(totalHealth / healthCount) : 0;
-  const avgInvestibility = investibilityCount > 0 ? Math.round(totalInvestibility / investibilityCount) : 76;
+  const avgInvestibility = investibilityCount > 0 ? Math.round(totalInvestibility / investibilityCount) : 0;
+  const healthGrade = avgHealth >= 75 ? 'Grade A' : avgHealth >= 60 ? 'Grade B' : avgHealth >= 45 ? 'Grade C' : 'Grade D';
+  const healthTrend = avgHealth >= 70 ? '~ Healthy' : avgHealth >= 50 ? '~ Watch' : avgHealth >= 35 ? '~ At Risk' : '~ Critical';
+  const investGrade = avgInvestibility >= 88 ? 'Grade A+' : avgInvestibility >= 75 ? 'Grade A' : avgInvestibility >= 60 ? 'Grade B' : avgInvestibility >= 45 ? 'Grade C' : 'Grade D';
+  const activeApplications = submissions.filter((s) => s.status === 'PENDING_REVIEW').length;
+  const activeMentors = mentorMatches.filter((m) => m.status === 'ACTIVE').length;
 
   runwayValues.sort((a, b) => a - b);
   const medianRunway =
@@ -266,7 +278,33 @@ export default function PortfolioDashboard() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => router.push('/demo-day')}
+            className="text-xs font-semibold border-blue-200 text-blue-700 hover:bg-blue-50 flex items-center gap-1.5"
+          >
+            <Presentation className="h-3.5 w-3.5 text-blue-600" />
+            Demo Day & Pitches
+            {pitchConnections.length > 0 && (
+              <Badge className="bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0 ml-1">
+                {pitchConnections.length}
+              </Badge>
+            )}
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => {
+              setSelectedStartupId(undefined);
+              setConnectModalOpen(true);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5"
+          >
+            <Send className="h-3.5 w-3.5" />
+            Pitch to VC
+          </Button>
+
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'overview' | 'insights' | 'compare')} className="w-auto">
             <TabsList className="bg-muted p-1 rounded-lg">
               <TabsTrigger value="overview" className="text-xs font-semibold">
@@ -290,30 +328,30 @@ export default function PortfolioDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Total Startups"
-              value="1,247"
+              value={startups.length}
               icon={Building2}
-              trend="~ +12.5%"
+              trend={startups.length > 0 ? `~ ${startups.length} active` : '~ No active ventures'}
               subtitle="active ventures"
             />
             <StatCard
               title="Active Applications"
-              value="89"
+              value={activeApplications}
               icon={FileText}
-              trend="~ +8.2%"
+              trend={activeApplications > 0 ? '~ Pending review' : '~ All reviewed'}
               subtitle="pending review"
             />
             <StatCard
               title="Funding Disbursed"
               value={formatINRExact(totalDisbursed)}
               icon={IndianRupee}
-              trend="~ +15.3%"
+              trend={totalSanctioned > 0 ? `~ ${Math.round((totalDisbursed / totalSanctioned) * 100)}% deployed` : '~ Capital deployed'}
               subtitle={totalSanctioned > 0 ? `of ${formatINRExact(totalSanctioned)} sanctioned` : 'of sanctioned'}
             />
             <StatCard
               title="Mentors Active"
-              value="42"
+              value={activeMentors}
               icon={Users}
-              trend="~ +5"
+              trend="~ Active engagements"
               subtitle="engagements"
             />
           </div>
@@ -322,16 +360,16 @@ export default function PortfolioDashboard() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatCard
               title="Portfolio Avg Health"
-              value={`${avgHealth}/100`}
+              value={healthCount > 0 ? `${avgHealth}/100` : '-'}
               icon={Activity}
-              trend="~ Benchmark"
-              subtitle="Grade B+"
+              trend={healthCount > 0 ? healthTrend : '~ No data'}
+              subtitle={healthCount > 0 ? healthGrade : 'No evaluations'}
             />
             <StatCard
               title="Investibility Rating"
-              value={`${avgInvestibility}/100`}
+              value={investibilityCount > 0 ? `${avgInvestibility}/100` : '-'}
               icon={Sparkles}
-              trend="~ Grade A"
+              trend={investibilityCount > 0 ? `~ ${investGrade}` : '~ No data'}
               subtitle="investor-ready"
             />
             <StatCard
@@ -596,6 +634,13 @@ export default function PortfolioDashboard() {
           onDeleted={() => setEditingStartup(null)}
         />
       )}
+
+      {/* Connect to VC Modal */}
+      <ConnectStartupModal
+        isOpen={connectModalOpen}
+        onClose={() => setConnectModalOpen(false)}
+        preselectedStartupId={selectedStartupId}
+      />
     </div>
   );
 }

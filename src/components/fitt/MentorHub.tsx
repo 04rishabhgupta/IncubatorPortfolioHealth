@@ -75,31 +75,44 @@ export function MentorHub({
       </>}
       onClose={onClose}
     >
-      {tab === 'suggested' && ranked.map(([mentorId, a]) => {
-        const mentor = mentors.find(m => m.id === mentorId);
-        if (!mentor) return null;
-        return (
-          <MentorCard
-            key={mentorId}
-            mentor={mentor}
-            tasksLabel={a.tasks.map(n => `#${n} ${tracker.supportLog.find(t => t.n === n)?.title}`).join(', ')}
-            load={mentorLoad(mentor.id, startupId, mentorMatches, mentorRequests)}
-            openTasks={openTasks}
-            rankedTaskNs={a.tasks}
-            onConnect={handleConnect(mentor.id)}
-          />
+      {tab === 'suggested' && (() => {
+        const availableRanked = ranked.filter(([mentorId]) => mentors.some(m => m.id === mentorId));
+        return availableRanked.length === 0 ? (
+          <p className={styles.note}>No mentor suggestions available in the pool.</p>
+        ) : (
+          availableRanked.map(([mentorId, a]) => {
+            const mentor = mentors.find(m => m.id === mentorId);
+            if (!mentor) return null;
+            return (
+              <MentorCard
+                key={mentorId}
+                mentor={mentor}
+                tasksLabel={a.tasks.map(n => `#${n} ${tracker.supportLog.find(t => t.n === n)?.title}`).join(', ')}
+                load={mentorLoad(mentor.id, startupId, mentorMatches, mentorRequests)}
+                openTasks={openTasks}
+                rankedTaskNs={a.tasks}
+                onConnect={handleConnect(mentor.id)}
+              />
+            );
+          })
         );
-      })}
+      })()}
 
-      {tab === 'pool' && mentors.map(mentor => (
-        <MentorCard
-          key={mentor.id}
-          mentor={mentor}
-          load={mentorLoad(mentor.id, startupId, mentorMatches, mentorRequests)}
-          openTasks={openTasks}
-          onConnect={handleConnect(mentor.id)}
-        />
-      ))}
+      {tab === 'pool' && (
+        mentors.length === 0 ? (
+          <p className={styles.note}>No mentors available in the pool.</p>
+        ) : (
+          mentors.map(mentor => (
+            <MentorCard
+              key={mentor.id}
+              mentor={mentor}
+              load={mentorLoad(mentor.id, startupId, mentorMatches, mentorRequests)}
+              openTasks={openTasks}
+              onConnect={handleConnect(mentor.id)}
+            />
+          ))
+        )
+      )}
 
       {tab === 'connected' && (
         conns.length === 0 ? <p className={styles.note}>No mentors connected yet.</p> : conns.map(c => {

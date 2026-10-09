@@ -90,7 +90,7 @@ export function TaskDialog({
         <>
           {task.heldReason && <div className={styles.warnbox}>{task.heldReason}</div>}
           {gap && <div className={cx(styles.warnbox, styles.warnboxAmber)}>{gap}</div>}
-          {suggestions.length === 0
+          {suggestions.filter(s => mentors.some(m => m.id === s.mentorId)).length === 0
             ? <p className={styles.note}>No mentor in the pool fits this task.</p>
             : suggestions.map((s, i) => {
               const mentor = mentors.find(m => m.id === s.mentorId);

@@ -484,3 +484,67 @@ export interface RegulatoryItem {
   whatToCheck: string[]; // 2–3 checks the manager should raise with the founder
   isSample: true;
 }
+
+export type InvestorType = 'VC_FUND' | 'ANGEL_NETWORK' | 'FAMILY_OFFICE' | 'CORPORATE_VC' | 'MICRO_VC';
+
+export interface Investor {
+  id: string;
+  name: string;
+  firm: string;
+  type: InvestorType;
+  title: string;
+  email?: string;
+  phone?: string;
+  linkedin?: string;
+  website?: string;
+  sectors: string[];
+  stages: string[];
+  ticketSize: string;
+  geography: string;
+  thesis: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export type DemoDayStatus = 'UPCOMING' | 'LIVE' | 'COMPLETED';
+
+export interface DemoDayEvent {
+  id: string;
+  title: string;
+  date: string;
+  time?: string;
+  location: string;
+  description: string;
+  status: DemoDayStatus;
+  cohort: string;
+  startupIds: string[];
+  investorIds: string[];
+  createdAt: string;
+}
+
+export type PitchConnectionStatus =
+  | 'INTRODUCED'
+  | 'PITCH_SCHEDULED'
+  | 'PITCHED'
+  | 'DUE_DILIGENCE'
+  | 'TERM_SHEET'
+  | 'COMMITTED'
+  | 'PASSED';
+
+export interface PitchConnection {
+  id: string;
+  startupId: string;
+  investorId: string;
+  demoDayId?: string | null;
+  connectedBy: string; // User ID
+  status: PitchConnectionStatus;
+  round: string; // e.g. Pre-Seed, Seed, Series A
+  askAmount: string; // e.g. ₹2.5 Cr
+  pitchDeckUrl?: string;
+  notes: string;
+  nextAction?: string;
+  rating?: number; // 1-5
+  connectedOn: string;
+  updatedAt: string;
+}
+

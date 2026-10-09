@@ -23,6 +23,7 @@ import {
   LayoutDashboard,
   HeartPulse,
   Network,
+  Presentation,
   Menu,
   UserCheck,
 } from 'lucide-react';
@@ -149,12 +150,14 @@ export function TopNavbar() {
         { label: 'Portfolio', href: '/portfolio', icon: Building2 },
         { label: 'Assessments', href: '/assessments', icon: HeartPulse },
         { label: 'Mentor Connect', href: '/mentor-connect', icon: Network },
+        { label: 'Demo Day', href: '/demo-day', icon: Presentation },
         { label: 'Users & Roles', href: '/admin/users', icon: Users },
       ]
     : [
         { label: 'Portfolio', href: '/portfolio', icon: Building2 },
         { label: 'Assessments', href: '/assessments', icon: HeartPulse },
         { label: 'Mentor Connect', href: '/mentor-connect', icon: Network },
+        { label: 'Demo Day', href: '/demo-day', icon: Presentation },
         {
           label: 'Submissions',
           href: '/submissions',

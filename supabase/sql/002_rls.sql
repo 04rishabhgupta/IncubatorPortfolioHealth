@@ -331,8 +331,8 @@ CREATE POLICY mentors_select_policy ON mentors
 
 CREATE POLICY mentors_modify_policy ON mentors
   FOR ALL TO authenticated
-  USING (get_current_role() IN ('ADMIN', 'INVESTMENT_MANAGER'))
-  WITH CHECK (get_current_role() IN ('ADMIN', 'INVESTMENT_MANAGER'));
+  USING (get_current_role() IN ('ADMIN', 'INVESTMENT_MANAGER', 'INVESTMENT_ASSOCIATE'))
+  WITH CHECK (get_current_role() IN ('ADMIN', 'INVESTMENT_MANAGER', 'INVESTMENT_ASSOCIATE'));
 
 -- ------------------------------------------------------------------------------
 -- 8. POLICIES: ACTIVITY LOGS (Insert & Select Only)

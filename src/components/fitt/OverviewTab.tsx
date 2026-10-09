@@ -1,18 +1,19 @@
 import type React from 'react';
-import { FittTracker, MonthlyMetrics } from '@/types';
+import { FittTracker, MonthlyMetrics, Startup } from '@/types';
 import styles from './fitt.module.css';
 import { NeedsAttention } from './NeedsAttention';
 import { cx, fmtLakh, fmtLakhVal, fmtCr, overallBandLabel, overallBandColor, monthLabel } from './helpers';
 
 import { HorizontalBarChartComponent } from './charts';
 
-export function OverviewTab({ startupId, tracker, latestMetrics, runway, founderName, actor }: {
+export function OverviewTab({ startupId, tracker, latestMetrics, runway, founderName, actor, investibility }: {
   startupId: string;
   tracker: FittTracker;
   latestMetrics?: MonthlyMetrics;
   runway: number;
   founderName: string;
   actor: string;
+  investibility?: Startup['investibility'];
 }) {
   const lastReview = tracker.sixMonthReviews[tracker.sixMonthReviews.length - 1];
   const lastCheckin = tracker.monthlyCheckins[tracker.monthlyCheckins.length - 1];
@@ -84,7 +85,7 @@ export function OverviewTab({ startupId, tracker, latestMetrics, runway, founder
               letterSpacing: '.02em',
             }}
           >
-            AI Investibility: 76/100 (Grade A)
+            {investibility ? `AI Investibility: ${investibility.total}/100 (Grade ${investibility.grade})` : 'AI Investibility: Pending Analysis'}
           </div>
           <span style={{ fontSize: '12px', color: 'var(--text-2)' }}>
             Institutional syndicate readiness evaluated across Team, Market TAM, Patent IP, and Capital Efficiency.

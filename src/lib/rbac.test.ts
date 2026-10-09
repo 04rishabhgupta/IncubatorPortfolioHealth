@@ -51,6 +51,36 @@ describe('can', () => {
   it('prevents admin from drafting assessment', () => {
     expect(can(admin, 'draft_assessment', s1)).toBe(false);
   });
+
+  it('allows admin, portfolio heads, and portfolio managers to manage mentors', () => {
+    expect(can(admin, 'manage_mentor')).toBe(true);
+    expect(can(im1, 'manage_mentor')).toBe(true);
+    expect(can(ia1, 'manage_mentor')).toBe(true);
+  });
+
+  it('allows all authenticated users to view demo day', () => {
+    expect(can(admin, 'view_demo_day')).toBe(true);
+    expect(can(im1, 'view_demo_day')).toBe(true);
+    expect(can(ia1, 'view_demo_day')).toBe(true);
+  });
+
+  it('allows admin, portfolio heads, and portfolio managers to manage investors and schedule demo days', () => {
+    expect(can(admin, 'manage_investor')).toBe(true);
+    expect(can(im1, 'manage_investor')).toBe(true);
+    expect(can(ia1, 'manage_investor')).toBe(true);
+    expect(can(admin, 'schedule_demo_day')).toBe(true);
+    expect(can(im1, 'schedule_demo_day')).toBe(true);
+    expect(can(ia1, 'schedule_demo_day')).toBe(true);
+  });
+
+  it('enforces startup ownership for create_pitch_connection', () => {
+    expect(can(admin, 'create_pitch_connection', s1)).toBe(true);
+    expect(can(admin, 'create_pitch_connection', s2)).toBe(true);
+    expect(can(im1, 'create_pitch_connection', s1)).toBe(true);
+    expect(can(im1, 'create_pitch_connection', s2)).toBe(false);
+    expect(can(ia1, 'create_pitch_connection', s1)).toBe(true);
+    expect(can(ia1, 'create_pitch_connection', s2)).toBe(false);
+  });
 });
 
 describe('startup assignment permissions', () => {

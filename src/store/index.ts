@@ -13,6 +13,7 @@ import {
   updateMentorRequestAction,
   addMentorMatchAction,
   updateMentorMatchAction,
+  addMentorAction,
 } from '@/app/actions/mentors';
 import {
   addDataRequestAction,
@@ -30,6 +31,12 @@ import {
   updateStaffUserAction,
 } from '@/app/actions/users';
 import {
+  addInvestorAction,
+  createDemoDayAction,
+  createPitchConnectionAction,
+  updatePitchConnectionAction,
+} from '@/app/actions/demoDay';
+import {
   Startup,
   MonthlyMetrics,
   HealthAssessment,
@@ -45,6 +52,9 @@ import {
   FounderActionItem,
   AppNotification,
   RegulatoryItem,
+  Investor,
+  DemoDayEvent,
+  PitchConnection,
 } from '@/types';
 import { startups as seedStartups } from '@/data/seed/startups';
 import { metrics as seedMetrics } from '@/data/seed/metrics';
@@ -108,6 +118,9 @@ interface StoreState {
   founderActionItems: FounderActionItem[];
   notifications: AppNotification[];
   regulatoryItems: RegulatoryItem[];
+  investors: Investor[];
+  demoDays: DemoDayEvent[];
+  pitchConnections: PitchConnection[];
 
   // Actions
   login: (user: User) => void;
@@ -133,6 +146,7 @@ interface StoreState {
   updateMilestone: (milestone: Milestone) => void;
   updateAssessment: (assessment: HealthAssessment) => Promise<{ data: HealthAssessment | null; error: string | null }>;
   addAssessment: (assessment: HealthAssessment) => Promise<{ data: HealthAssessment | null; error: string | null }>;
+  addMentor: (mentor: Mentor) => Promise<{ data: Mentor | null; error: string | null }>;
   addMentorRequest: (req: MentorRequest) => Promise<{ data: MentorRequest | null; error: string | null }>;
   updateMentorRequest: (req: MentorRequest) => Promise<{ data: MentorRequest | null; error: string | null }>;
   addMentorMatch: (match: MentorMatch) => Promise<{ data: MentorMatch | null; error: string | null }>;
@@ -143,6 +157,13 @@ interface StoreState {
   updateSubmission: (sub: FounderSubmission) => Promise<{ data: FounderSubmission | null; error: string | null }>;
   inviteStaffUser: (input: unknown) => Promise<{ data: User | null; error: string | null }>;
   updateStaffUser: (input: unknown) => Promise<{ data: User | null; error: string | null }>;
+
+  // Demo Day & Investors
+  addInvestor: (investor: Investor) => Promise<{ data: Investor | null; error: string | null }>;
+  createDemoDay: (event: DemoDayEvent) => Promise<{ data: DemoDayEvent | null; error: string | null }>;
+  updateDemoDay: (event: DemoDayEvent) => Promise<{ data: DemoDayEvent | null; error: string | null }>;
+  createPitchConnection: (connection: PitchConnection) => Promise<{ data: PitchConnection | null; error: string | null }>;
+  updatePitchConnection: (connection: PitchConnection) => Promise<{ data: PitchConnection | null; error: string | null }>;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 11);
@@ -165,6 +186,9 @@ export const useStore = create<StoreState>()((set, get) => ({
       founderActionItems: [],
       notifications: seedNotifications,
       regulatoryItems: [],
+      investors: [],
+      demoDays: [],
+      pitchConnections: [],
 
       login: (user) => set({ currentUser: user }),
       logout: () => {
@@ -293,6 +317,9 @@ export const useStore = create<StoreState>()((set, get) => ({
           activityLogs: [],
           founderActionItems: [],
           notifications: seedNotifications,
+          investors: [],
+          demoDays: [],
+          pitchConnections: [],
         }),
 
       updateAssignment: async (startupId, managerId, associateId, actor) => {
@@ -781,6 +808,41 @@ export const useStore = create<StoreState>()((set, get) => ({
         }
       },
 
+      addMentor: async (mentor) => {
+        set((state) => ({
+          mentors: [mentor, ...state.mentors],
+        }));
+
+        try {
+          const res = await addMentorAction({
+            id: mentor.id,
+            name: mentor.name,
+            title: mentor.title,
+            phone: mentor.phone,
+            linkedin: mentor.linkedin,
+            sectors: mentor.sectors,
+            expertise: mentor.expertise,
+            stages: mentor.stages,
+            geography: mentor.geography,
+            availability: mentor.availability,
+            maxActiveMatches: mentor.maxActiveMatches,
+            bio: mentor.bio,
+            active: mentor.active,
+          });
+
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              mentors: state.mentors.map((m) => (m.id === mentor.id ? canonical : m)),
+            }));
+            return { data: canonical, error: null };
+          }
+          return { data: mentor, error: null };
+        } catch {
+          return { data: mentor, error: null };
+        }
+      },
+
       addMentorRequest: async (req) => {
         const prevReqs = get().mentorRequests;
         const prevNotifs = get().notifications;
@@ -1142,6 +1204,99 @@ export const useStore = create<StoreState>()((set, get) => ({
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : String(err);
           return { data: null, error: message || 'Failed to update staff user' };
+        }
+      },
+
+      addInvestor: async (investor) => {
+        set((state) => ({
+          investors: [investor, ...state.investors],
+        }));
+        try {
+          const res = await addInvestorAction(investor);
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              investors: state.investors.map((inv) => (inv.id === investor.id ? canonical : inv)),
+            }));
+            return { data: canonical, error: null };
+          }
+          return { data: investor, error: null };
+        } catch {
+          return { data: investor, error: null };
+        }
+      },
+
+      createDemoDay: async (event) => {
+        set((state) => ({
+          demoDays: [event, ...state.demoDays],
+        }));
+        try {
+          const res = await createDemoDayAction(event);
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              demoDays: state.demoDays.map((d) => (d.id === event.id ? canonical : d)),
+            }));
+            return { data: canonical, error: null };
+          }
+          return { data: event, error: null };
+        } catch {
+          return { data: event, error: null };
+        }
+      },
+
+      updateDemoDay: async (event) => {
+        set((state) => ({
+          demoDays: state.demoDays.map((d) => (d.id === event.id ? event : d)),
+        }));
+        return { data: event, error: null };
+      },
+
+      createPitchConnection: async (connection) => {
+        const targetStartup = get().startups.find((s) => s.id === connection.startupId);
+        const targetInvestor = get().investors.find((i) => i.id === connection.investorId);
+        const newNotif: AppNotification = {
+          id: generateId(),
+          title: 'New Pitch / Investor Connection',
+          message: `${targetStartup?.name || 'Startup'} connected to ${targetInvestor?.firm || 'Investor'} (${connection.round}).`,
+          type: 'STARTUP_UPDATE',
+          startupId: connection.startupId,
+          startupName: targetStartup?.name,
+          createdAt: new Date().toISOString(),
+          read: false,
+          actionUrl: '/demo-day',
+        };
+
+        set((state) => ({
+          pitchConnections: [connection, ...state.pitchConnections],
+          notifications: [newNotif, ...state.notifications],
+        }));
+
+        try {
+          const res = await createPitchConnectionAction(connection);
+          if (res.data) {
+            const canonical = res.data;
+            set((state) => ({
+              pitchConnections: state.pitchConnections.map((pc) => (pc.id === connection.id ? canonical : pc)),
+            }));
+            return { data: canonical, error: null };
+          }
+          return { data: connection, error: null };
+        } catch {
+          return { data: connection, error: null };
+        }
+      },
+
+      updatePitchConnection: async (connection) => {
+        set((state) => ({
+          pitchConnections: state.pitchConnections.map((pc) => (pc.id === connection.id ? connection : pc)),
+        }));
+
+        try {
+          await updatePitchConnectionAction(connection);
+          return { data: connection, error: null };
+        } catch {
+          return { data: connection, error: null };
         }
       },
     })
