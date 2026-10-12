@@ -5,7 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import { useStore } from '@/store';
 import { scopeStartups } from '@/lib/rbac';
 import { TODAY } from '@/lib/clock';
-import { getLatestMetrics, getLatestApprovedAssessment, getRunwayMonths } from '@/lib/derived';
+import { getLatestMetrics, getRunwayMonths } from '@/lib/derived';
+import { getStartupHealth, getStartupRedFlags } from '@/lib/oversight';
+import { AdminOversight, MentorActivity } from '@/components/portfolio/AdminOversight';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -199,7 +201,8 @@ function PortfolioContent() {
 
   // Row Data for Startup Directory Table
   const tableData: PortfolioRow[] = startups.map((s) => {
-    const latestAss = getLatestApprovedAssessment(s.id, assessments);
+    const health = getStartupHealth(s, assessments);
+    const flags = getStartupRedFlags(s, { metrics, assessments, milestones, dataRequests, submissions }, TODAY);
     const runway = getRunwayMonths(s.id, metrics);
     const sMetrics = getLatestMetrics(s.id, metrics);
     const sMilestones = milestones.filter((m) => m.startupId === s.id);
@@ -228,9 +231,9 @@ function PortfolioContent() {
 
     return {
       startup: s,
-      health: latestAss ? { total: latestAss.total, band: latestAss.band, delta: latestAss.delta3m } : null,
+      health: health ? { total: health.total, band: health.band, delta: health.delta } : null,
       investibility: s.investibility ? { total: s.investibility.total, grade: s.investibility.grade } : null,
-      redFlags: s.aiAnalysis?.redFlags || [],
+      redFlags: flags.map((f) => f.text),
       runway,
       cash: sMetrics?.cashBalance || 0,
       burn: sMetrics?.monthlyBurn || 0,
@@ -299,6 +302,10 @@ function PortfolioContent() {
           />
         </CardContent>
       </Card>
+
+      {/* Portfolio Head only: health, red flags and Mentor Connect activity for their startups */}
+      {currentUser.role === 'INVESTMENT_MANAGER' && <AdminOversight startups={startups} />}
+      {currentUser.role === 'INVESTMENT_MANAGER' && <MentorActivity startups={startups} />}
 
       {/* Edit Modal */}
       {editingStartup && (
