@@ -160,7 +160,7 @@ export function parseStartupExcel(data: ArrayBuffer | Uint8Array, existingStartu
     sheetNames[0];
 
   const wsOverview = wb.Sheets[baselineSheetName] || wb.Sheets[wb.SheetNames[0]];
-  const overviewRows = XLSX.utils.sheet_to_json<any[]>(wsOverview, { header: 1 });
+  const overviewRows = XLSX.utils.sheet_to_json<unknown[]>(wsOverview, { header: 1 });
 
   const overviewMap: Record<string, string> = {};
   for (const row of overviewRows) {
@@ -180,7 +180,7 @@ export function parseStartupExcel(data: ArrayBuffer | Uint8Array, existingStartu
   if (overviewRows.length > 1 && overviewRows[0]) {
     const headerRow = overviewRows[0];
     const dataRow = overviewRows[1] || [];
-    headerRow.forEach((col: any, idx: number) => {
+    headerRow.forEach((col: unknown, idx: number) => {
       if (col && dataRow[idx] !== undefined) {
         overviewMap[String(col).trim().toLowerCase()] = String(dataRow[idx]).trim();
       }
@@ -320,18 +320,18 @@ export function parseStartupExcel(data: ArrayBuffer | Uint8Array, existingStartu
   let checkinRunwayNote = 'Liquidity adequate for next 6 months';
 
   if (wsCheckin) {
-    const cRows = XLSX.utils.sheet_to_json<any[]>(wsCheckin, { header: 1 });
-    const cMap: Record<string, any> = {};
+    const cRows = XLSX.utils.sheet_to_json<unknown[]>(wsCheckin, { header: 1 });
+    const cMap: Record<string, unknown> = {};
     cRows.forEach((r) => {
       if (r && r[0] && r[1] !== undefined) cMap[String(r[0]).trim().toLowerCase()] = r[1];
     });
-    if (cMap['monthly revenue (₹ lakh)'] !== undefined) checkinMonthlyRev = (parseFloat(cMap['monthly revenue (₹ lakh)']) || 0) * 100000;
-    if (cMap['monthly burn (₹ lakh)'] !== undefined) checkinMonthlyBurn = (parseFloat(cMap['monthly burn (₹ lakh)']) || 7.5) * 100000;
+    if (cMap['monthly revenue (₹ lakh)'] !== undefined) checkinMonthlyRev = (parseFloat(String(cMap['monthly revenue (₹ lakh)'])) || 0) * 100000;
+    if (cMap['monthly burn (₹ lakh)'] !== undefined) checkinMonthlyBurn = (parseFloat(String(cMap['monthly burn (₹ lakh)'])) || 7.5) * 100000;
     if (cMap['cash in bank (₹ lakh)'] !== undefined) checkinCashNote = `₹${cMap['cash in bank (₹ lakh)']} Lakh in bank`;
     if (cMap['no. of paying customers'] !== undefined) checkinPayingCust = parseInt(String(cMap['no. of paying customers']), 10) || 1;
-    if (cMap['gross margin %'] !== undefined) checkinGrossMargin = parseFloat(cMap['gross margin %']) || 55;
+    if (cMap['gross margin %'] !== undefined) checkinGrossMargin = parseFloat(String(cMap['gross margin %'])) || 55;
     if (cMap['pm notes / observations'] || cMap['pm notes']) checkinPmNotes = String(cMap['pm notes / observations'] || cMap['pm notes']);
-    if (cMap['surviving runway (months)']) checkinRunwayNote = `Runway ~${Math.round(parseFloat(cMap['surviving runway (months)']) || 4)} months`;
+    if (cMap['surviving runway (months)']) checkinRunwayNote = `Runway ~${Math.round(parseFloat(String(cMap['surviving runway (months)'])) || 4)} months`;
   }
 
   if (wsPipeline) {
@@ -363,7 +363,7 @@ export function parseStartupExcel(data: ArrayBuffer | Uint8Array, existingStartu
   let overallPct = 76;
 
   if (wsReview) {
-    const rRows = XLSX.utils.sheet_to_json<any[]>(wsReview, { header: 1 });
+    const rRows = XLSX.utils.sheet_to_json<unknown[]>(wsReview, { header: 1 });
     rRows.forEach((row) => {
       const k = String(row[0] || '').toLowerCase();
       const v = String(row[1] || '');
@@ -380,7 +380,7 @@ export function parseStartupExcel(data: ArrayBuffer | Uint8Array, existingStartu
   const wsVc = wb.Sheets['Value Chain'] || wb.Sheets['📊 Value Chain Matrix'] || wb.Sheets[sheetNames.find((n) => /value\s*chain/i.test(n)) || ''];
   const vcList: FittValueChainStage[] = [];
   if (wsVc) {
-    const vcRows = XLSX.utils.sheet_to_json<any[]>(wsVc, { header: 1 });
+    const vcRows = XLSX.utils.sheet_to_json<unknown[]>(wsVc, { header: 1 });
     const startIdx = vcRows.findIndex((r) => r && r[0] && (String(r[0]).includes('1 —') || String(r[0]).includes('Raw Material') || String(r[0]).includes('Sourcing')));
     const rowsToParse = startIdx >= 0 ? vcRows.slice(startIdx) : vcRows.slice(1);
     rowsToParse.forEach((row) => {
@@ -406,7 +406,7 @@ export function parseStartupExcel(data: ArrayBuffer | Uint8Array, existingStartu
   const swotThreats: string[] = [];
 
   if (wsSwot) {
-    const sRows = XLSX.utils.sheet_to_json<any[]>(wsSwot, { header: 1 });
+    const sRows = XLSX.utils.sheet_to_json<unknown[]>(wsSwot, { header: 1 });
     sRows.slice(7).forEach((r) => {
       if (r[1] && String(r[1]).trim() && !String(r[1]).includes('◼') && !String(r[1]).includes('💡')) {
         swotStrengths.push(String(r[1]).trim());
@@ -421,7 +421,7 @@ export function parseStartupExcel(data: ArrayBuffer | Uint8Array, existingStartu
   const wsDd = wb.Sheets['🔬 LDD-FDD'] || wb.Sheets[sheetNames.find((n) => /ldd|fdd|diligence/i.test(n)) || ''];
   const ddSections: FittDDSection[] = [];
   if (wsDd) {
-    const ddRows = XLSX.utils.sheet_to_json<any[]>(wsDd, { header: 1 });
+    const ddRows = XLSX.utils.sheet_to_json<unknown[]>(wsDd, { header: 1 });
     let currentSection: FittDDSection = { label: 'Legal & Compliance', items: [] };
     ddRows.forEach((r) => {
       if (r && r[0]) {
