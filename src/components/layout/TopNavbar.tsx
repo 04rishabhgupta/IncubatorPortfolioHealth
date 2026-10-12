@@ -26,6 +26,7 @@ import {
   Presentation,
   Menu,
   UserCheck,
+  Radar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -152,6 +153,7 @@ export function TopNavbar() {
         { label: 'Mentor Connect', href: '/mentor-connect', icon: Network },
         { label: 'Demo Day', href: '/demo-day', icon: Presentation },
         { label: 'Users & Roles', href: '/admin/users', icon: Users },
+        { label: 'Sector Intel', href: '/sectors', icon: Radar },
       ]
     : [
         { label: 'Portfolio', href: '/portfolio', icon: Building2 },
@@ -164,6 +166,7 @@ export function TopNavbar() {
           icon: FileText,
           badge: pendingSubmissionsCount,
         },
+        { label: 'Sector Intel', href: '/sectors', icon: Radar },
       ];
 
   return (
